@@ -121,10 +121,18 @@ export const tradesRouter = router({
       const items = await ctx.prisma.proposalItem.findMany({ where: { proposalId: proposal.id } });
       const lockIds = [proposal.listingId, ...items.map((i) => i.listingId)];
       return ctx.prisma.$transaction(async (tx) => {
-        await tx.listing.updateMany({
-          where: { id: { in: lockIds } },
+        // Re-check inside the tx: every listing must still be ACTIVE (none locked
+        // by another accepted trade, removed, or already traded) before we lock.
+        const lockable = await tx.listing.updateMany({
+          where: { id: { in: lockIds }, status: ListingStatus.ACTIVE },
           data: { status: ListingStatus.LOCKED },
         });
+        if (lockable.count !== lockIds.length) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'One or more listings are no longer available',
+          });
+        }
         return tx.tradeProposal.update({
           where: { id: proposal.id },
           data: { status: ProposalStatus.ACCEPTED, acceptedAt: new Date() },
