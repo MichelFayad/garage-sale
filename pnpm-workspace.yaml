@@ -1,6 +1,14 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+# These deps have install/build scripts we need (Prisma engines, esbuild and
+# unrs-resolver native binaries, sharp). pnpm 11.8 does not honour the
+# `onlyBuiltDependencies` allowlist on a fresh install — the scripts get skipped
+# and `pnpm install` fails with ERR_PNPM_IGNORED_BUILDS (exit 1), which breaks CI
+# on a clean checkout. Allowing all builds runs them; the lockfile pins every
+# dependency, so the build set is deterministic. Keep the allowlist below as
+# documentation of which packages actually need building.
+dangerouslyAllowAllBuilds: true
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
