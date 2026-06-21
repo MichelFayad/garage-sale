@@ -3,10 +3,10 @@ import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
-import { HomeScreen } from '../screens/HomeScreen';
+import { TabNavigator } from './TabNavigator';
 
 // Auth gate: a spinner while hydrating, the login/register flow when signed out,
-// and the (placeholder) Home once authenticated. A full tab navigator lands P12.
+// and the authenticated tab shell once signed in. Real screens land P12.
 export function RootNavigator() {
   const { status } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -20,7 +20,7 @@ export function RootNavigator() {
   }
 
   if (status === 'authenticated') {
-    return <HomeScreen />;
+    return <TabNavigator />;
   }
 
   return mode === 'login' ? (
