@@ -7,8 +7,9 @@ import { listingsRouter } from './routers/listings.js';
 import { browseRouter } from './routers/browse.js';
 import { watchlistRouter } from './routers/watchlist.js';
 import { tradesRouter } from './routers/trades.js';
+import { adminRouter } from './routers/admin.js';
 
-// Root router — trade/messaging routers are added P6+.
+// Root router — trade/messaging routers are added P6+; admin lands P9.
 export const appRouter = router({
   health: healthRouter,
   auth: authRouter,
@@ -18,6 +19,7 @@ export const appRouter = router({
   browse: browseRouter,
   watchlist: watchlistRouter,
   trades: tradesRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;
