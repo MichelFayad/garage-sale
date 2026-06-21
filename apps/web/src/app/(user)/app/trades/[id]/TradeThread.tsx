@@ -12,6 +12,8 @@ export function TradeThread({ id }: { id: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [me, setMe] = useState('');
   const [body, setBody] = useState('');
+  const [stars, setStars] = useState(5);
+  const [review, setReview] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -41,6 +43,18 @@ export function TradeThread({ id }: { id: string }) {
     setMessages(await trpc.trades.messages.query({ proposalId: id }));
   }
 
+  async function confirm() {
+    await trpc.trades.confirm.mutate({ id });
+    await load();
+  }
+
+  async function submitRating(e: React.FormEvent) {
+    e.preventDefault();
+    await trpc.trades.rate.mutate({ id, stars, review: review || undefined });
+    setReview('');
+    await load();
+  }
+
   async function reportUser() {
     if (!proposal) return;
     const other = proposal.proposerId === me ? proposal.ownerId : proposal.proposerId;
@@ -64,6 +78,56 @@ export function TradeThread({ id }: { id: string }) {
           {proposal.status} · offered: {proposal.items.map((i) => i.listing.title).join(', ')}
         </p>
       </div>
+
+      {proposal.status === 'ACCEPTED' && (
+        <div className="rounded border border-gray-200 p-4">
+          <p className="text-sm text-gray-600">Confirmations: {proposal.confirmations.length}/2</p>
+          {proposal.confirmations.some((c) => c.userId === me) ? (
+            <p className="text-sm text-green-700">✓ You confirmed. Waiting for the other trader.</p>
+          ) : (
+            <button
+              onClick={confirm}
+              className="mt-1 rounded bg-gray-900 px-3 py-2 text-sm text-white"
+            >
+              Confirm trade
+            </button>
+          )}
+        </div>
+      )}
+
+      {proposal.status === 'COMPLETED' &&
+        (proposal.ratings.some((r) => r.raterId === me) ? (
+          <p className="text-sm text-green-700">✓ Trade completed — you rated this trade.</p>
+        ) : (
+          <form onSubmit={submitRating} className="space-y-2 rounded border border-gray-200 p-4">
+            <p className="font-medium">Rate this trade</p>
+            <label className="block text-sm">
+              <span className="mr-2">Stars</span>
+              <select
+                value={stars}
+                onChange={(e) => setStars(Number(e.target.value))}
+                className="rounded border border-gray-300 px-2 py-1"
+              >
+                {[5, 4, 3, 2, 1].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <textarea
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              placeholder="Review (optional)"
+              maxLength={1000}
+              rows={2}
+              className="w-full rounded border border-gray-300 px-3 py-2"
+            />
+            <button type="submit" className="rounded bg-gray-900 px-3 py-2 text-sm text-white">
+              Submit rating
+            </button>
+          </form>
+        ))}
 
       <div className="space-y-2 rounded border border-gray-200 p-4">
         {messages.length === 0 && <p className="text-sm text-gray-400">No messages yet.</p>}
