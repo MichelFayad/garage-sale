@@ -1,15 +1,26 @@
-// JWT bearer auth for the mobile app + shared API. Web uses Auth.js cookie
-// sessions (wired in apps/web at P2); both resolve to the same principal.
+// JWT bearer auth for the mobile app + shared API, and the web session cookie.
+// Both web (cookie) and mobile (bearer) resolve to the same principal.
 
 import { jwtVerify, SignJWT } from 'jose';
 import type { Role } from './roles.js';
 
+export type AccountStatus = 'ACTIVE' | 'SUSPENDED' | 'BANNED';
+
 export interface TokenClaims {
   sub: string; // userId
   role: Role;
+  accountStatus: AccountStatus;
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export type TokenKind = 'access' | 'refresh';
+
+/** httpOnly cookie name carrying the web access token. */
+export const SESSION_COOKIE = 'gs_session';
 
 function secretFor(kind: TokenKind): Uint8Array {
   const raw = kind === 'access' ? process.env.JWT_ACCESS_SECRET : process.env.JWT_REFRESH_SECRET;
@@ -25,7 +36,7 @@ function ttlFor(kind: TokenKind): number {
 }
 
 export async function signToken(claims: TokenClaims, kind: TokenKind): Promise<string> {
-  return new SignJWT({ role: claims.role })
+  return new SignJWT({ role: claims.role, accountStatus: claims.accountStatus })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(claims.sub)
     .setIssuedAt()
@@ -35,8 +46,25 @@ export async function signToken(claims: TokenClaims, kind: TokenKind): Promise<s
 
 export async function verifyToken(token: string, kind: TokenKind): Promise<TokenClaims> {
   const { payload } = await jwtVerify(token, secretFor(kind));
-  if (typeof payload.sub !== 'string' || typeof payload.role !== 'string') {
+  if (
+    typeof payload.sub !== 'string' ||
+    typeof payload.role !== 'string' ||
+    typeof payload.accountStatus !== 'string'
+  ) {
     throw new Error('Malformed token claims');
   }
-  return { sub: payload.sub, role: payload.role as Role };
+  return {
+    sub: payload.sub,
+    role: payload.role as Role,
+    accountStatus: payload.accountStatus as AccountStatus,
+  };
+}
+
+/** Issue an access + refresh pair for a principal (login / refresh / OAuth). */
+export async function createTokenPair(claims: TokenClaims): Promise<TokenPair> {
+  const [accessToken, refreshToken] = await Promise.all([
+    signToken(claims, 'access'),
+    signToken(claims, 'refresh'),
+  ]);
+  return { accessToken, refreshToken };
 }
