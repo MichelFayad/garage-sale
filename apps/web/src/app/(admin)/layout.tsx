@@ -13,8 +13,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <Link href="/admin/users">Users</Link>
           <Link href="/admin/listings">Listings</Link>
-          <Link href="/admin/fee">Fee</Link>
+          <Link href="/admin/trades">Trades</Link>
           <Link href="/admin/reports">Reports</Link>
+          <Link href="/admin/flags">Flags</Link>
+          <Link href="/admin/categories">Categories</Link>
+          <Link href="/admin/fee">Fee</Link>
+          <Link href="/admin/settings">Settings</Link>
+          <Link href="/admin/staff">Staff</Link>
+          <Link href="/admin/audit">Audit</Link>
           <LogoutButton className="ml-auto text-slate-300 hover:underline" />
         </nav>
       </header>
