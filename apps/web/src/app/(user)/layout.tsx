@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoutButton } from '../../components/LogoutButton';
 
 // Trader portal shell — guarded (role=TRADER, account ACTIVE) by middleware.ts.
 export default function UserLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +13,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
           <Link href="/app/listings">My listings</Link>
           <Link href="/app/browse">Browse</Link>
           <Link href="/app/trades">Trades</Link>
+          <LogoutButton className="ml-auto text-gray-500 hover:underline" />
         </nav>
       </header>
       <main className="mx-auto max-w-5xl w-full flex-1 p-4">{children}</main>
