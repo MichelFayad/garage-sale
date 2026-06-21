@@ -4,7 +4,8 @@
 // per-post fee was already collected at publish (P4).
 
 import { DEFAULT_CONFIRMATION_WINDOW_DAYS, shouldFlagUntrusted } from '@garage-sale/core';
-import { ProposalStatus, TrustStatus, type PrismaClient } from '@garage-sale/db';
+import { EmailType, ProposalStatus, TrustStatus, type PrismaClient } from '@garage-sale/db';
+import { sendEmail } from './email.js';
 
 async function confirmationWindowDays(prisma: PrismaClient): Promise<number> {
   const setting = await prisma.platformSetting.findUnique({
@@ -62,6 +63,20 @@ export async function sweepUntrustedFlags(
         data: { trustStatus: TrustStatus.UNTRUSTED },
       }),
     ]);
+
+    const user = await prisma.user.findUnique({
+      where: { id: nonConfirmerId },
+      select: { email: true },
+    });
+    if (user) {
+      await sendEmail(prisma, {
+        type: EmailType.UNTRUSTED_FLAG,
+        toEmail: user.email,
+        userId: nonConfirmerId,
+        subject: 'Your account was flagged as untrusted',
+        body: `You didn't confirm a trade within ${windowDays} days of the other trader confirming. Your account is now flagged Untrusted.`,
+      });
+    }
     flagged += 1;
   }
 

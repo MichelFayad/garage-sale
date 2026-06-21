@@ -5,17 +5,35 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
+  EmailType,
   ListingStatus,
   ProposalStatus,
   ReportTargetType,
   type PrismaClient,
 } from '@garage-sale/db';
 import { protectedProcedure, router } from '../trpc.js';
+import { appBaseUrl, sendEmail } from '../email.js';
 
 function traderOnly(role: string) {
   if (role !== 'TRADER') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Trader account required' });
   }
+}
+
+/** Email a single user by id (no-op if they vanished). */
+async function notify(
+  prisma: PrismaClient,
+  userId: string,
+  type: EmailType,
+  subject: string,
+  body: string,
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  if (user) await sendEmail(prisma, { type, toEmail: user.email, userId, subject, body });
+}
+
+function tradeLink(proposalId: string): string {
+  return `${appBaseUrl()}/app/trades/${proposalId}`;
 }
 
 const proposalInclude = {
@@ -97,7 +115,7 @@ export const tradesRouter = router({
         ctx.principal.userId,
         input.offeredListingIds,
       );
-      return ctx.prisma.tradeProposal.create({
+      const created = await ctx.prisma.tradeProposal.create({
         data: {
           listingId: target.id,
           proposerId: ctx.principal.userId,
@@ -107,6 +125,14 @@ export const tradesRouter = router({
         },
         include: proposalInclude,
       });
+      await notify(
+        ctx.prisma,
+        target.ownerId,
+        EmailType.PROPOSAL_RECEIVED,
+        'New trade proposal',
+        `You received a proposal for "${target.title}". View it: ${tradeLink(created.id)}`,
+      );
+      return created;
     }),
 
   /** Owner accepts → locks the target + all offered listings. */
@@ -122,7 +148,7 @@ export const tradesRouter = router({
       }
       const items = await ctx.prisma.proposalItem.findMany({ where: { proposalId: proposal.id } });
       const lockIds = [proposal.listingId, ...items.map((i) => i.listingId)];
-      return ctx.prisma.$transaction(async (tx) => {
+      const result = await ctx.prisma.$transaction(async (tx) => {
         // Re-check inside the tx: every listing must still be ACTIVE (none locked
         // by another accepted trade, removed, or already traded) before we lock.
         const lockable = await tx.listing.updateMany({
@@ -141,6 +167,14 @@ export const tradesRouter = router({
           include: proposalInclude,
         });
       });
+      await notify(
+        ctx.prisma,
+        proposal.proposerId,
+        EmailType.PROPOSAL_ACCEPTED,
+        'Your proposal was accepted',
+        `Your proposal for "${result.listing.title}" was accepted. Confirm when you've traded: ${tradeLink(proposal.id)}`,
+      );
+      return result;
     }),
 
   /** Owner declines an open proposal. */
@@ -154,11 +188,19 @@ export const tradesRouter = router({
       if (proposal.status !== ProposalStatus.PROPOSED) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Proposal is not open' });
       }
-      return ctx.prisma.tradeProposal.update({
+      const declined = await ctx.prisma.tradeProposal.update({
         where: { id: proposal.id },
         data: { status: ProposalStatus.DECLINED },
         include: proposalInclude,
       });
+      await notify(
+        ctx.prisma,
+        proposal.proposerId,
+        EmailType.PROPOSAL_DECLINED,
+        'Your proposal was declined',
+        `Your proposal for "${declined.listing.title}" was declined.`,
+      );
+      return declined;
     }),
 
   /** Either participant counters an open proposal with a new offer (their items). */
@@ -234,12 +276,17 @@ export const tradesRouter = router({
       if (proposal.status !== ProposalStatus.ACCEPTED) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Trade is not accepted' });
       }
-      // Idempotent: unique (proposalId, userId).
-      await ctx.prisma.tradeConfirmation.upsert({
+      const otherParty =
+        proposal.proposerId === ctx.principal.userId ? proposal.ownerId : proposal.proposerId;
+      // Idempotent: unique (proposalId, userId). Track whether this is new.
+      const existing = await ctx.prisma.tradeConfirmation.findUnique({
         where: { proposalId_userId: { proposalId: proposal.id, userId: ctx.principal.userId } },
-        create: { proposalId: proposal.id, userId: ctx.principal.userId },
-        update: {},
       });
+      if (!existing) {
+        await ctx.prisma.tradeConfirmation.create({
+          data: { proposalId: proposal.id, userId: ctx.principal.userId },
+        });
+      }
       const count = await ctx.prisma.tradeConfirmation.count({
         where: { proposalId: proposal.id },
       });
@@ -258,6 +305,26 @@ export const tradesRouter = router({
             data: { status: ProposalStatus.COMPLETED, completedAt: new Date() },
           }),
         ]);
+        if (!existing) {
+          for (const uid of [proposal.proposerId, proposal.ownerId]) {
+            await notify(
+              ctx.prisma,
+              uid,
+              EmailType.TRADE_COMPLETE,
+              'Trade completed',
+              `Your trade is complete. Leave a rating: ${tradeLink(proposal.id)}`,
+            );
+          }
+        }
+      } else if (!existing) {
+        // First confirmation — prompt the other party to confirm.
+        await notify(
+          ctx.prisma,
+          otherParty,
+          EmailType.CONFIRM_PROMPT,
+          'Confirm your trade',
+          `The other trader confirmed. Please confirm to complete: ${tradeLink(proposal.id)}`,
+        );
       }
       return ctx.prisma.tradeProposal.findUniqueOrThrow({
         where: { id: proposal.id },
@@ -324,8 +391,12 @@ export const tradesRouter = router({
   sendMessage: protectedProcedure
     .input(z.object({ proposalId: z.string(), body: z.string().min(1).max(2000) }))
     .mutation(async ({ ctx, input }) => {
-      await participantProposal(ctx.prisma, input.proposalId, ctx.principal.userId);
-      return ctx.prisma.message.create({
+      const proposal = await participantProposal(
+        ctx.prisma,
+        input.proposalId,
+        ctx.principal.userId,
+      );
+      const message = await ctx.prisma.message.create({
         data: {
           proposalId: input.proposalId,
           senderId: ctx.principal.userId,
@@ -333,6 +404,16 @@ export const tradesRouter = router({
         },
         include: { sender: { select: { id: true, displayName: true } } },
       });
+      const recipient =
+        proposal.proposerId === ctx.principal.userId ? proposal.ownerId : proposal.proposerId;
+      await notify(
+        ctx.prisma,
+        recipient,
+        EmailType.NEW_MESSAGE,
+        'New message about your trade',
+        `${message.sender.displayName} sent you a message: ${tradeLink(proposal.id)}`,
+      );
+      return message;
     }),
 
   // ─── Reporting ───────────────────────────────────────────
