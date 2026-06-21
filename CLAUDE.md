@@ -82,8 +82,8 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 | P5    | Listings (Have/Want CRUD, photos, browse w/ filters + radius, watchlist)                   | ✅ done |
 | P6    | Trade proposals (single/bundle, accept/decline/counter, lock) + messaging + report         | ✅ done |
 | P7    | Confirmation & trust (dual-confirm → COMPLETED, ratings, untrusted cron sweep)             | ✅ done |
-| P8    | Email notifications (replace stub with real provider, wire all triggers)                   | ⬜ next |
-| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ⬜      |
+| P8    | Email notifications (Resend provider + all trade/trust triggers wired)                     | ✅ done |
+| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ⬜ next |
 | P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ⬜      |
 | P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ⬜      |
 | P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ⬜      |
@@ -95,7 +95,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 
 - **Block** (block a trader from a thread): no `Block` model — needs a migration. Only `report` shipped.
 - **Photo upload:** listings take photo **URLs** only; no blob storage / camera upload yet (P12).
-- **Email:** `packages/api/src/email.ts` is a stub (logs + writes an `EmailLog` row). Real provider = P8.
+- **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails await the admin suspend/ban action (P9).
 - **Cron scheduler:** `/api/cron/untrusted` exists (Bearer `CRON_SECRET`) but nothing invokes it on a schedule yet — wire Vercel Cron / GH Action at deploy/P11.
 - **Tests:** only `packages/core` pure functions are unit-tested. Router/integration/e2e tests are P11.
 
