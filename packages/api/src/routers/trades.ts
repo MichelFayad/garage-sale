@@ -23,6 +23,8 @@ const proposalInclude = {
   items: { include: { listing: true } },
   proposer: { select: { id: true, displayName: true } },
   owner: { select: { id: true, displayName: true } },
+  confirmations: true,
+  ratings: true,
 } as const;
 
 /** Load a proposal the caller participates in, or throw. */
@@ -220,6 +222,90 @@ export const tradesRouter = router({
           include: proposalInclude,
         });
       });
+    }),
+
+  // ─── Confirmation & ratings (no fee) ─────────────────────
+
+  /** Confirm a trade. Two confirmations ⇒ proposal + listings COMPLETED. */
+  confirm: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await participantProposal(ctx.prisma, input.id, ctx.principal.userId);
+      if (proposal.status !== ProposalStatus.ACCEPTED) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Trade is not accepted' });
+      }
+      // Idempotent: unique (proposalId, userId).
+      await ctx.prisma.tradeConfirmation.upsert({
+        where: { proposalId_userId: { proposalId: proposal.id, userId: ctx.principal.userId } },
+        create: { proposalId: proposal.id, userId: ctx.principal.userId },
+        update: {},
+      });
+      const count = await ctx.prisma.tradeConfirmation.count({
+        where: { proposalId: proposal.id },
+      });
+      if (count >= 2) {
+        const items = await ctx.prisma.proposalItem.findMany({
+          where: { proposalId: proposal.id },
+        });
+        const ids = [proposal.listingId, ...items.map((i) => i.listingId)];
+        await ctx.prisma.$transaction([
+          ctx.prisma.listing.updateMany({
+            where: { id: { in: ids } },
+            data: { status: ListingStatus.COMPLETED },
+          }),
+          ctx.prisma.tradeProposal.update({
+            where: { id: proposal.id },
+            data: { status: ProposalStatus.COMPLETED, completedAt: new Date() },
+          }),
+        ]);
+      }
+      return ctx.prisma.tradeProposal.findUniqueOrThrow({
+        where: { id: proposal.id },
+        include: proposalInclude,
+      });
+    }),
+
+  /** Rate the counterparty on a COMPLETED trade; recomputes their average. */
+  rate: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        stars: z.number().int().min(1).max(5),
+        review: z.string().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await participantProposal(ctx.prisma, input.id, ctx.principal.userId);
+      if (proposal.status !== ProposalStatus.COMPLETED) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Trade is not completed' });
+      }
+      const rateeId =
+        proposal.proposerId === ctx.principal.userId ? proposal.ownerId : proposal.proposerId;
+      await ctx.prisma.rating.upsert({
+        where: { proposalId_raterId: { proposalId: proposal.id, raterId: ctx.principal.userId } },
+        create: {
+          proposalId: proposal.id,
+          raterId: ctx.principal.userId,
+          rateeId,
+          stars: input.stars,
+          review: input.review,
+        },
+        update: { stars: input.stars, review: input.review },
+      });
+      // Recompute the ratee's aggregate from all ratings they've received.
+      const agg = await ctx.prisma.rating.aggregate({
+        where: { rateeId },
+        _avg: { stars: true },
+        _count: true,
+      });
+      await ctx.prisma.user.update({
+        where: { id: rateeId },
+        data: {
+          ratingAvg: agg._avg.stars ?? 0,
+          ratingCount: agg._count,
+        },
+      });
+      return { ok: true };
     }),
 
   // ─── Messaging (proposal-scoped) ─────────────────────────
