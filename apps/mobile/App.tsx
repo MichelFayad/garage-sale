@@ -1,29 +1,21 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { DEFAULT_POST_FEE_CENTS } from '@garage-sale/core';
+import { SafeAreaView, StyleSheet } from 'react-native';
+import { AuthProvider } from './src/auth/AuthContext';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
-// P0: app boots. P3 adds navigation + auth screens; P12 builds the full
-// User Portal natively against the shared API.
+// P2-B: auth-gated shell — credentials + OAuth sign-in against the shared API,
+// JWT stored in secure store. P12 builds the full native User Portal.
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Garage Sale</Text>
-      <Text style={styles.subtitle}>
-        Mobile shell. Post fee: ${(DEFAULT_POST_FEE_CENTS / 100).toFixed(2)}
-      </Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <SafeAreaView style={styles.root}>
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </SafeAreaView>
+    </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  title: { fontSize: 28, fontWeight: '600' },
-  subtitle: { fontSize: 14, color: '#666' },
+  root: { flex: 1, backgroundColor: '#fff' },
 });
