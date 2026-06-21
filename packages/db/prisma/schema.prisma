@@ -107,6 +107,11 @@ enum EmailType {
   ACCOUNT_BANNED
 }
 
+enum VerificationTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 // ─── Identity ───────────────────────────────────────────────
 
 /// Trader account. passwordHash is null for OAuth-only users.
@@ -132,7 +137,8 @@ model User {
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
-  oauthAccounts     OAuthAccount[]
+  oauthAccounts      OAuthAccount[]
+  verificationTokens VerificationToken[]
   listings          Listing[]
   proposalsMade     TradeProposal[]     @relation("ProposalProposer")
   proposalsReceived TradeProposal[]     @relation("ProposalOwner")
@@ -158,6 +164,21 @@ model OAuthAccount {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+}
+
+/// Single-use opaque tokens for email verification and password reset.
+/// Only the SHA-256 hash is stored; the raw token lives only in the emailed link.
+model VerificationToken {
+  id         String                @id @default(cuid())
+  userId     String
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       VerificationTokenType
+  tokenHash  String                @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime              @default(now())
+
+  @@index([userId, type])
 }
 
 /// Internal staff. Always email/password (no OAuth).

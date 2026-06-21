@@ -1,10 +1,10 @@
 // Auth router — credentials path (register/login/refresh/me) issuing JWT pairs
-// for both web (session cookie) and mobile (bearer). OAuth (Google/Apple/
-// Facebook) + email verification land in P2 slice B.
+// for both web (session cookie) and mobile (bearer), plus email verification and
+// password reset. OAuth (Google/Apple/Facebook) lands in apps/web (Auth.js).
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import type { User } from '@garage-sale/db';
+import { EmailType, type PrismaClient, type User } from '@garage-sale/db';
 import {
   createTokenPair,
   hashPassword,
@@ -13,6 +13,24 @@ import {
   verifyToken,
 } from '@garage-sale/auth';
 import { protectedProcedure, publicProcedure, router } from '../trpc.js';
+import { appBaseUrl, sendEmail } from '../email.js';
+import { consumeVerificationToken, issueVerificationToken } from '../verification.js';
+
+/** Email a verification link to a freshly registered or re-requesting trader. */
+async function sendVerificationEmail(
+  prisma: PrismaClient,
+  user: { id: string; email: string; displayName: string },
+) {
+  const token = await issueVerificationToken(prisma, user.id, 'EMAIL_VERIFICATION');
+  const link = `${appBaseUrl()}/verify-email?token=${token}`;
+  await sendEmail(prisma, {
+    type: EmailType.EMAIL_VERIFICATION,
+    toEmail: user.email,
+    userId: user.id,
+    subject: 'Verify your Garage Sale email',
+    body: `Hi ${user.displayName}, confirm your email to start trading: ${link}`,
+  });
+}
 
 const credentials = z.object({
   email: z.string().email().toLowerCase(),
@@ -32,15 +50,75 @@ export const authRouter = router({
           email: input.email,
           passwordHash: await hashPassword(input.password),
           displayName: input.displayName,
-          // TODO(P2-B): send verification email; gate login on emailVerifiedAt.
         },
       });
-      const claims: TokenClaims = {
-        sub: user.id,
-        role: 'TRADER',
-        accountStatus: user.accountStatus,
-      };
-      return { user: publicUser(user), tokens: await createTokenPair(claims) };
+      await sendVerificationEmail(ctx.prisma, user);
+      // No tokens yet — the trader must verify their email before logging in.
+      return { user: publicUser(user), verificationRequired: true };
+    }),
+
+  /** Re-send the verification link. Silent on unknown/verified email (no enumeration). */
+  resendVerification: publicProcedure
+    .input(z.object({ email: z.string().email().toLowerCase() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({ where: { email: input.email } });
+      if (user && !user.emailVerifiedAt && user.accountStatus !== 'BANNED') {
+        await sendVerificationEmail(ctx.prisma, user);
+      }
+      return { ok: true };
+    }),
+
+  /** Consume a verification token and mark the trader's email verified. */
+  verifyEmail: publicProcedure
+    .input(z.object({ token: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const consumed = await consumeVerificationToken(
+        ctx.prisma,
+        input.token,
+        'EMAIL_VERIFICATION',
+      );
+      if (!consumed) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired link' });
+      }
+      await ctx.prisma.user.update({
+        where: { id: consumed.userId },
+        data: { emailVerifiedAt: new Date() },
+      });
+      return { ok: true };
+    }),
+
+  /** Start a password reset. Silent on unknown/OAuth-only email (no enumeration). */
+  requestPasswordReset: publicProcedure
+    .input(z.object({ email: z.string().email().toLowerCase() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.prisma.user.findUnique({ where: { email: input.email } });
+      if (user && user.passwordHash && user.accountStatus !== 'BANNED') {
+        const token = await issueVerificationToken(ctx.prisma, user.id, 'PASSWORD_RESET');
+        const link = `${appBaseUrl()}/reset-password?token=${token}`;
+        await sendEmail(ctx.prisma, {
+          type: EmailType.PASSWORD_RESET,
+          toEmail: user.email,
+          userId: user.id,
+          subject: 'Reset your Garage Sale password',
+          body: `Reset your password (link valid 1 hour): ${link}`,
+        });
+      }
+      return { ok: true };
+    }),
+
+  /** Consume a reset token and set a new password. */
+  resetPassword: publicProcedure
+    .input(z.object({ token: z.string().min(1), password: z.string().min(8).max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      const consumed = await consumeVerificationToken(ctx.prisma, input.token, 'PASSWORD_RESET');
+      if (!consumed) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired link' });
+      }
+      await ctx.prisma.user.update({
+        where: { id: consumed.userId },
+        data: { passwordHash: await hashPassword(input.password) },
+      });
+      return { ok: true };
     }),
 
   login: publicProcedure.input(credentials).mutation(async ({ ctx, input }) => {
@@ -50,6 +128,9 @@ export const authRouter = router({
     }
     if (user.accountStatus === 'BANNED') {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Account banned' });
+    }
+    if (!user.emailVerifiedAt) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Email not verified' });
     }
     const claims: TokenClaims = {
       sub: user.id,
