@@ -4,6 +4,8 @@ import { authRouter } from './routers/auth.js';
 import { oauthRouter } from './routers/oauth.js';
 import { billingRouter } from './routers/billing.js';
 import { listingsRouter } from './routers/listings.js';
+import { browseRouter } from './routers/browse.js';
+import { watchlistRouter } from './routers/watchlist.js';
 
 // Root router — trade/messaging routers are added P6+.
 export const appRouter = router({
@@ -12,6 +14,8 @@ export const appRouter = router({
   oauth: oauthRouter,
   billing: billingRouter,
   listings: listingsRouter,
+  browse: browseRouter,
+  watchlist: watchlistRouter,
 });
 
 export type AppRouter = typeof appRouter;
