@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -p GarageSale_Project_Scope_v2.1.docx word/document.xml)"
+    ]
+  }
+}
