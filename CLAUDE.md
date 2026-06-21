@@ -83,21 +83,23 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 | P6    | Trade proposals (single/bundle, accept/decline/counter, lock) + messaging + report         | ✅ done |
 | P7    | Confirmation & trust (dual-confirm → COMPLETED, ratings, untrusted cron sweep)             | ✅ done |
 | P8    | Email notifications (Resend provider + all trade/trust triggers wired)                     | ✅ done |
-| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ⬜ next |
-| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ⬜      |
+| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ✅ done |
+| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ⬜ next |
 | P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ⬜      |
 | P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ⬜      |
 | P13   | Mobile release (EAS build/submit, store listings, TestFlight/Play, push)                   | ⬜      |
 
-> **API-first:** P4–P8 build trader features against `packages/api`; web + mobile both consume them.
+> **API-first:** P4–P9 build features against `packages/api`; web + mobile both consume them. Admin (P9) lives under `appRouter.admin` (sub-routers users/listings/trades/fee/categories/reports/flags/settings/admins/audit), gated by `adminProcedure` + `requireTier` role tiers (SUPPORT < OPERATIONS < SUPER). Every admin mutation writes an `AuditLog` row via `audit()`. CSV export is a Node route handler (`/api/admin/export`), not tRPC.
 
 ### Known deferred items / open loose ends
 
 - **Block** (block a trader from a thread): no `Block` model — needs a migration. Only `report` shipped.
 - **Photo upload:** listings take photo **URLs** only; no blob storage / camera upload yet (P12).
-- **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails await the admin suspend/ban action (P9).
+- **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails now fire from `admin.users.setAccountStatus` (P9).
 - **Cron scheduler:** `/api/cron/untrusted` exists (Bearer `CRON_SECRET`) but nothing invokes it on a schedule yet — wire Vercel Cron / GH Action at deploy/P11.
 - **Tests:** only `packages/core` pure functions are unit-tested. Router/integration/e2e tests are P11.
+- **Admin export:** CSV only (`/api/admin/export`). PDF export from the scope doc is deferred (CSV covers the reporting need; revisit in P10/P11 if a formatted report is required).
+- **Admin RBAC:** tier checks are server-side (`requireTier`); the admin UI shows all controls regardless of role and surfaces a FORBIDDEN error on use. Per-role UI hiding is cosmetic and deferred.
 
 ---
 
