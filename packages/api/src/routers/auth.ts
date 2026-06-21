@@ -4,7 +4,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { EmailType, type PrismaClient, type User } from '@garage-sale/db';
+import { EmailType, type PrismaClient } from '@garage-sale/db';
 import {
   createTokenPair,
   hashPassword,
@@ -15,6 +15,7 @@ import {
 import { protectedProcedure, publicProcedure, router } from '../trpc.js';
 import { appBaseUrl, sendEmail } from '../email.js';
 import { consumeVerificationToken, issueVerificationToken } from '../verification.js';
+import { publicUser } from '../user.js';
 
 /** Email a verification link to a freshly registered or re-requesting trader. */
 async function sendVerificationEmail(
@@ -205,18 +206,3 @@ export const authRouter = router({
     return { kind: 'trader' as const, ...publicUser(user) };
   }),
 });
-
-/** Public-safe projection of a trader (no hashes / Stripe ids). */
-function publicUser(user: User) {
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-    photoUrl: user.photoUrl,
-    city: user.city,
-    trustStatus: user.trustStatus,
-    accountStatus: user.accountStatus,
-    paymentValid: user.paymentValid,
-    emailVerified: user.emailVerifiedAt !== null,
-  };
-}
