@@ -12,6 +12,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
           </Link>
           <Link href="/app/listings">My listings</Link>
           <Link href="/app/browse">Browse</Link>
+          <Link href="/app/watchlist">Watchlist</Link>
           <Link href="/app/trades">Trades</Link>
           <Link href="/app/billing">Payment</Link>
           <LogoutButton className="ml-auto text-gray-500 hover:underline" />
