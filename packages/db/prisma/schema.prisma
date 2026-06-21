@@ -1,7 +1,7 @@
-// Garage Sale — Prisma schema.
-// P0: generator + datasource + a minimal bootstrap model so the client
-// generates and migrations run. The FULL data model (User, Listing,
-// TradeProposal, FeeCharge, etc. — see build plan "Data Model") lands in P1.
+// Garage Sale — Prisma schema (full data model, P1).
+// Local item-swap platform. Sole revenue = a flat fee charged PER PUBLISHED
+// LISTING (per post) via Stripe — NOT on trade completion (supersedes scope
+// doc v2.1). See build plan "Data Model" for field-level rationale.
 
 generator client {
   provider = "prisma-client-js"
@@ -12,11 +12,438 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Platform-wide key/value settings (e.g. confirmationWindowDays, prohibited
-/// items, email templates). Real columns/relations expanded in P1.
-model PlatformSetting {
+// ─── Enums ──────────────────────────────────────────────────
+
+enum TrustStatus {
+  TRUSTED
+  UNTRUSTED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum OAuthProvider {
+  GOOGLE
+  APPLE
+  FACEBOOK
+}
+
+enum AdminRole {
+  SUPER
+  OPERATIONS
+  SUPPORT
+}
+
+enum ListingType {
+  HAVE
+  WANT
+}
+
+enum Condition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_PAYMENT
+  ACTIVE
+  LOCKED
+  COMPLETED
+  REMOVED
+}
+
+enum ProposalStatus {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  CANCELLED
+  COMPLETED
+}
+
+enum FeeChargeStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum UntrustedFlagStatus {
+  ACTIVE
+  CLEARED
+  ESCALATED
+}
+
+enum ReportTargetType {
+  LISTING
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+/// Transactional email triggers (scope notification table).
+enum EmailType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  PROPOSAL_RECEIVED
+  PROPOSAL_ACCEPTED
+  PROPOSAL_DECLINED
+  CONFIRM_PROMPT
+  TRADE_COMPLETE
+  POST_FEE_RECEIPT
+  UNTRUSTED_FLAG
+  NEW_MESSAGE
+  ACCOUNT_SUSPENDED
+  ACCOUNT_BANNED
+}
+
+// ─── Identity ───────────────────────────────────────────────
+
+/// Trader account. passwordHash is null for OAuth-only users.
+model User {
+  id                    String        @id @default(cuid())
+  email                 String        @unique
+  passwordHash          String?
+  emailVerifiedAt       DateTime?
+  displayName           String
+  photoUrl              String?
+  city                  String?
+  neighbourhood         String?
+  lat                   Float?
+  lng                   Float?
+  bio                   String?
+  stripeCustomerId      String?
+  stripePaymentMethodId String?
+  paymentValid          Boolean       @default(false)
+  ratingAvg             Decimal       @default(0) @db.Decimal(3, 2)
+  ratingCount           Int           @default(0)
+  trustStatus           TrustStatus   @default(TRUSTED)
+  accountStatus         AccountStatus @default(ACTIVE)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  oauthAccounts     OAuthAccount[]
+  listings          Listing[]
+  proposalsMade     TradeProposal[]     @relation("ProposalProposer")
+  proposalsReceived TradeProposal[]     @relation("ProposalOwner")
+  confirmations     TradeConfirmation[]
+  feeCharges        FeeCharge[]
+  ratingsGiven      Rating[]            @relation("RatingRater")
+  ratingsReceived   Rating[]            @relation("RatingRatee")
+  untrustedFlags    UntrustedFlag[]
+  messages          Message[]
+  reports           Report[]
+  watchlist         Watchlist[]
+  emailLogs         EmailLog[]
+}
+
+/// Links a social login to one User (by verified email).
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          OAuthProvider
+  providerAccountId String
+  createdAt         DateTime      @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Internal staff. Always email/password (no OAuth).
+model AdminUser {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  displayName   String
+  role          AdminRole
+  accountStatus AccountStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+
+  serviceFeeConfigs ServiceFeeConfig[]
+  untrustedReviews  UntrustedFlag[]
+  reportsHandled    Report[]
+  auditLogs         AuditLog[]
+  contentBlocks     ContentBlock[]
+  platformSettings  PlatformSetting[]
+}
+
+// ─── Catalogue ──────────────────────────────────────────────
+
+model Category {
+  id                 String   @id @default(cuid())
+  name               String
+  sortOrder          Int      @default(0)
+  enabled            Boolean  @default(true)
+  prohibitedKeywords String[]
+  createdAt          DateTime @default(now())
+
+  listings       Listing[] @relation("ListingCategory")
+  wantedListings Listing[] @relation("ListingWantedCategory")
+}
+
+model Listing {
+  id                String        @id @default(cuid())
+  ownerId           String
+  owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  type              ListingType
+  title             String
+  description       String
+  condition         Condition
+  categoryId        String
+  category          Category      @relation("ListingCategory", fields: [categoryId], references: [id])
+  city              String?
+  neighbourhood     String?
+  lat               Float?
+  lng               Float?
+  status            ListingStatus @default(DRAFT)
+  publishedAt       DateTime?
+  wantedDescription String? // for HAVE listings: what the owner wants
+  wantedCategoryId  String?
+  wantedCategory    Category?     @relation("ListingWantedCategory", fields: [wantedCategoryId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  photos     ListingPhoto[]
+  proposals  TradeProposal[] @relation("ProposalListing")
+  offeredIn  ProposalItem[]
+  feeCharges FeeCharge[]
+  watchers   Watchlist[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([categoryId])
+}
+
+model ListingPhoto {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int     @default(0)
+
+  @@index([listingId])
+}
+
+// ─── Trades ─────────────────────────────────────────────────
+
+model TradeProposal {
+  id               String          @id @default(cuid())
+  listingId        String
+  listing          Listing         @relation("ProposalListing", fields: [listingId], references: [id], onDelete: Cascade)
+  proposerId       String
+  proposer         User            @relation("ProposalProposer", fields: [proposerId], references: [id])
+  ownerId          String
+  owner            User            @relation("ProposalOwner", fields: [ownerId], references: [id])
+  status           ProposalStatus  @default(PROPOSED)
+  parentProposalId String? // for counters
+  parentProposal   TradeProposal?  @relation("ProposalCounter", fields: [parentProposalId], references: [id])
+  counters         TradeProposal[] @relation("ProposalCounter")
+  acceptedAt       DateTime?
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime        @default(now())
+
+  items          ProposalItem[]
+  confirmations  TradeConfirmation[]
+  ratings        Rating[]
+  messages       Message[]
+  untrustedFlags UntrustedFlag[]
+
+  @@index([listingId])
+  @@index([proposerId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+/// Proposer's offered item(s); multiple rows = a bundle.
+model ProposalItem {
+  id         String        @id @default(cuid())
+  proposalId String
+  proposal   TradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  listingId  String
+  listing    Listing       @relation(fields: [listingId], references: [id])
+
+  @@unique([proposalId, listingId])
+  @@index([proposalId])
+}
+
+/// 2 rows for a proposal ⇒ trade complete.
+model TradeConfirmation {
+  id          String        @id @default(cuid())
+  proposalId  String
+  proposal    TradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  confirmedAt DateTime      @default(now())
+
+  @@unique([proposalId, userId])
+  @@index([proposalId])
+}
+
+// ─── Money ──────────────────────────────────────────────────
+
+/// One row per post. Listing publishes only on SUCCEEDED.
+model FeeCharge {
+  id                    String          @id @default(cuid())
+  listingId             String
+  listing               Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User            @relation(fields: [userId], references: [id])
+  amountCents           Int
+  stripePaymentIntentId String?
+  status                FeeChargeStatus @default(PENDING)
+  createdAt             DateTime        @default(now())
+
+  @@index([listingId])
+  @@index([userId])
+}
+
+/// Flat per-post fee. Append-only = full version history; current = latest.
+model ServiceFeeConfig {
+  id               String    @id @default(cuid())
+  amountCents      Int
+  effectiveFrom    DateTime  @default(now())
+  changedByAdminId String
+  changedByAdmin   AdminUser @relation(fields: [changedByAdminId], references: [id])
+  createdAt        DateTime  @default(now())
+}
+
+// ─── Reputation & trust ─────────────────────────────────────
+
+model Rating {
+  id         String        @id @default(cuid())
+  proposalId String
+  proposal   TradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  raterId    String
+  rater      User          @relation("RatingRater", fields: [raterId], references: [id])
+  rateeId    String
+  ratee      User          @relation("RatingRatee", fields: [rateeId], references: [id])
+  stars      Int // 1-5
+  review     String?
+  createdAt  DateTime      @default(now())
+
+  @@unique([proposalId, raterId])
+  @@index([rateeId])
+}
+
+model UntrustedFlag {
+  id                String              @id @default(cuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id])
+  proposalId        String
+  proposal          TradeProposal       @relation(fields: [proposalId], references: [id])
+  reason            String
+  status            UntrustedFlagStatus @default(ACTIVE)
+  reviewedByAdminId String?
+  reviewedByAdmin   AdminUser?          @relation(fields: [reviewedByAdminId], references: [id])
+  createdAt         DateTime            @default(now())
+  resolvedAt        DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Messaging & moderation ─────────────────────────────────
+
+/// Thread scoped to an accepted proposal.
+model Message {
+  id         String        @id @default(cuid())
+  proposalId String
+  proposal   TradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User          @relation(fields: [senderId], references: [id])
+  body       String
+  createdAt  DateTime      @default(now())
+  readAt     DateTime?
+
+  @@index([proposalId])
+}
+
+model Report {
+  id               String           @id @default(cuid())
+  reporterId       String
+  reporter         User             @relation(fields: [reporterId], references: [id])
+  targetType       ReportTargetType
+  targetId         String
+  reason           String
+  status           ReportStatus     @default(OPEN)
+  handledByAdminId String?
+  handledByAdmin   AdminUser?       @relation(fields: [handledByAdminId], references: [id])
+  createdAt        DateTime         @default(now())
+
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
+model Watchlist {
   id        String   @id @default(cuid())
-  key       String   @unique
-  value     Json
-  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([listingId])
+}
+
+// ─── Ops & content ──────────────────────────────────────────
+
+model EmailLog {
+  id            String    @id @default(cuid())
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  type          EmailType
+  toEmail       String
+  sentAt        DateTime  @default(now())
+  providerMsgId String?
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  adminId    String
+  admin      AdminUser @relation(fields: [adminId], references: [id])
+  entityType String
+  entityId   String
+  action     String
+  reason     String?
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+}
+
+/// Marketing CMS content blocks.
+model ContentBlock {
+  id               String     @id @default(cuid())
+  slug             String
+  key              String
+  value            Json
+  updatedByAdminId String?
+  updatedByAdmin   AdminUser? @relation(fields: [updatedByAdminId], references: [id])
+  updatedAt        DateTime   @updatedAt
+
+  @@unique([slug, key])
+}
+
+/// Platform-wide settings, e.g. confirmationWindowDays, prohibited items.
+model PlatformSetting {
+  id               String     @id @default(cuid())
+  key              String     @unique
+  value            Json
+  updatedByAdminId String?
+  updatedByAdmin   AdminUser? @relation(fields: [updatedByAdminId], references: [id])
+  updatedAt        DateTime   @updatedAt
 }

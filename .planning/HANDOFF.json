@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-21T12:07:59.074Z",
+  "timestamp": "2026-06-21T12:12:49.704Z",
   "source": "auto-postool",
   "partial": false,
   "phase": null,
@@ -18,69 +18,29 @@
   "uncommitted_files": [
     {
       "status": "M",
-      "path": ".claude/settings.local.json"
-    },
-    {
-      "status": "M",
       "path": ".planning/HANDOFF.json"
     },
     {
-      "status": "??",
-      "path": ".env.example"
+      "status": "M",
+      "path": "packages/db/package.json"
     },
     {
-      "status": "??",
-      "path": ".github/"
+      "status": "M",
+      "path": "packages/db/prisma/schema.prisma"
     },
     {
-      "status": "??",
-      "path": ".gitignore"
+      "status": "M",
+      "path": "packages/db/prisma/seed.ts"
     },
     {
-      "status": "??",
-      "path": ".npmrc"
-    },
-    {
-      "status": "??",
-      "path": ".prettierignore"
-    },
-    {
-      "status": "??",
-      "path": ".prettierrc"
-    },
-    {
-      "status": "??",
-      "path": "apps/"
-    },
-    {
-      "status": "??",
-      "path": "eslint.config.mjs"
-    },
-    {
-      "status": "??",
-      "path": "package.json"
-    },
-    {
-      "status": "??",
-      "path": "packages/"
-    },
-    {
-      "status": "??",
+      "status": "M",
       "path": "pnpm-lock.yaml"
     },
     {
       "status": "??",
-      "path": "pnpm-workspace.yaml"
-    },
-    {
-      "status": "??",
-      "path": "tsconfig.base.json"
-    },
-    {
-      "status": "??",
-      "path": "turbo.json"
+      "path": "packages/db/prisma/migrations/"
     }
   ],
   "next_action": null,
-  "context_notes": "Recent commits:\n6af9a46 Initial commit: project scope and build plan"
+  "context_notes": "Recent commits:\nac4d259 P0: monorepo scaffold + tooling\n6af9a46 Initial commit: project scope and build plan"
 }
