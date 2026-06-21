@@ -6,6 +6,7 @@ import { billingRouter } from './routers/billing.js';
 import { listingsRouter } from './routers/listings.js';
 import { browseRouter } from './routers/browse.js';
 import { watchlistRouter } from './routers/watchlist.js';
+import { tradesRouter } from './routers/trades.js';
 
 // Root router — trade/messaging routers are added P6+.
 export const appRouter = router({
@@ -16,6 +17,7 @@ export const appRouter = router({
   listings: listingsRouter,
   browse: browseRouter,
   watchlist: watchlistRouter,
+  trades: tradesRouter,
 });
 
 export type AppRouter = typeof appRouter;
