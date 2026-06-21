@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { trpc } from '../../../../../lib/trpc';
+import { ProposeTrade } from './ProposeTrade';
 
 type Listing = Awaited<ReturnType<typeof trpc.listings.byId.query>>;
 
@@ -68,6 +69,8 @@ export function ListingDetail({ id }: { id: string }) {
           Edit listing
         </Link>
       )}
+
+      {!isOwner && listing.status === 'ACTIVE' && <ProposeTrade listingId={listing.id} />}
     </article>
   );
 }
