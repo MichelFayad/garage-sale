@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-21T11:29:23.440Z",
+  "timestamp": "2026-06-21T12:07:59.074Z",
   "source": "auto-postool",
-  "partial": true,
+  "partial": false,
   "phase": null,
   "phase_name": null,
   "phase_dir": null,
@@ -15,7 +15,72 @@
   "blockers": [],
   "human_actions_pending": [],
   "decisions": [],
-  "uncommitted_files": [],
+  "uncommitted_files": [
+    {
+      "status": "M",
+      "path": ".claude/settings.local.json"
+    },
+    {
+      "status": "M",
+      "path": ".planning/HANDOFF.json"
+    },
+    {
+      "status": "??",
+      "path": ".env.example"
+    },
+    {
+      "status": "??",
+      "path": ".github/"
+    },
+    {
+      "status": "??",
+      "path": ".gitignore"
+    },
+    {
+      "status": "??",
+      "path": ".npmrc"
+    },
+    {
+      "status": "??",
+      "path": ".prettierignore"
+    },
+    {
+      "status": "??",
+      "path": ".prettierrc"
+    },
+    {
+      "status": "??",
+      "path": "apps/"
+    },
+    {
+      "status": "??",
+      "path": "eslint.config.mjs"
+    },
+    {
+      "status": "??",
+      "path": "package.json"
+    },
+    {
+      "status": "??",
+      "path": "packages/"
+    },
+    {
+      "status": "??",
+      "path": "pnpm-lock.yaml"
+    },
+    {
+      "status": "??",
+      "path": "pnpm-workspace.yaml"
+    },
+    {
+      "status": "??",
+      "path": "tsconfig.base.json"
+    },
+    {
+      "status": "??",
+      "path": "turbo.json"
+    }
+  ],
   "next_action": null,
-  "context_notes": ""
+  "context_notes": "Recent commits:\n6af9a46 Initial commit: project scope and build plan"
 }

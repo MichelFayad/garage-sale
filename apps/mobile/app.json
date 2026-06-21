@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Garage Sale",
+    "slug": "garage-sale",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "garagesale",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.garagesale.app"
+    },
+    "android": {
+      "package": "com.garagesale.app"
+    }
+  }
+}

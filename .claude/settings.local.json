@@ -1,7 +1,25 @@
 {
+  "env": {
+    "ECC_GATEGUARD": "off"
+  },
   "permissions": {
     "allow": [
-      "Bash(unzip -p GarageSale_Project_Scope_v2.1.docx word/document.xml)"
+      "Bash(unzip -p GarageSale_Project_Scope_v2.1.docx word/document.xml)",
+      "Bash(python *)",
+      "Bash(ls apps *)",
+      "Bash(ls packages *)",
+      "Bash(pnpm -v)",
+      "Bash(git -C \"C:/Users/Michel/Desktop/Claude/Garage Sale\" log --oneline -1)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm --filter @garage-sale/db generate)",
+      "Bash(pnpm rebuild *)",
+      "Bash(../../node_modules/.bin/prisma generate *)",
+      "Bash(./node_modules/.bin/prisma generate *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm format:check)",
+      "Bash(pnpm format *)"
     ]
   }
 }

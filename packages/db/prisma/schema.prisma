@@ -1,0 +1,22 @@
+// Garage Sale — Prisma schema.
+// P0: generator + datasource + a minimal bootstrap model so the client
+// generates and migrations run. The FULL data model (User, Listing,
+// TradeProposal, FeeCharge, etc. — see build plan "Data Model") lands in P1.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Platform-wide key/value settings (e.g. confirmationWindowDays, prohibited
+/// items, email templates). Real columns/relations expanded in P1.
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
