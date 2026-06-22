@@ -94,6 +94,12 @@ export function MyListingsScreen() {
             </View>
           </View>
           <View style={styles.actions}>
+            {item.status === 'DRAFT' && (
+              <SecondaryButton
+                title="Publish"
+                onPress={() => push({ name: 'publish', listingId: item.id })}
+              />
+            )}
             {(item.status === 'DRAFT' || item.status === 'ACTIVE') && (
               <SecondaryButton
                 title="Edit"

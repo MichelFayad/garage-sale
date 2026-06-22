@@ -14,6 +14,7 @@ export function AccountScreen() {
       <Text style={styles.label}>{user?.displayName}</Text>
       <Text style={styles.subtitle}>{user?.email}</Text>
       <View style={styles.spacer} />
+      <SecondaryButton title="Payment method" onPress={() => push({ name: 'paymentMethod' })} />
       <SecondaryButton title="Blocked traders" onPress={() => push({ name: 'blocks' })} />
       <PrimaryButton title="Log out" tone="neutral" onPress={() => void logout()} />
     </View>

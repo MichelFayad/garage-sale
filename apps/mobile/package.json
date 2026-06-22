@@ -13,6 +13,7 @@
   "dependencies": {
     "@garage-sale/api": "workspace:*",
     "@garage-sale/core": "workspace:*",
+    "@stripe/stripe-react-native": "0.41.0",
     "@trpc/client": "^11.0.0",
     "@trpc/server": "^11.0.0",
     "expo": "~52.0.0",

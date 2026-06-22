@@ -12,6 +12,8 @@ import { TradesScreen } from '../screens/TradesScreen';
 import { TradeDetailScreen } from '../screens/TradeDetailScreen';
 import { ProposeTradeScreen } from '../screens/ProposeTradeScreen';
 import { BlocksScreen } from '../screens/BlocksScreen';
+import { PublishScreen } from '../screens/PublishScreen';
+import { PaymentMethodScreen } from '../screens/PaymentMethodScreen';
 import { colors } from '../components/ui';
 
 // Authenticated shell: a lightweight custom tab bar over an in-memory screen
@@ -29,6 +31,8 @@ const TITLES: Record<Route['name'], string> = {
   tradeDetail: 'Trade',
   proposeTrade: 'Propose trade',
   blocks: 'Blocked traders',
+  publish: 'Publish listing',
+  paymentMethod: 'Payment method',
   account: 'Account',
 };
 
@@ -54,6 +58,10 @@ function renderRoute(route: Route) {
       return <ProposeTradeScreen {...route} />;
     case 'blocks':
       return <BlocksScreen />;
+    case 'publish':
+      return <PublishScreen listingId={route.listingId} />;
+    case 'paymentMethod':
+      return <PaymentMethodScreen />;
     case 'account':
       return <AccountScreen />;
   }

@@ -13,6 +13,15 @@
     },
     "android": {
       "package": "com.garagesale.app"
-    }
+    },
+    "plugins": [
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.garagesale.app",
+          "enableGooglePay": false
+        }
+      ]
+    ]
   }
 }

@@ -1,18 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, StyleSheet } from 'react-native';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { AuthProvider } from './src/auth/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
-// P2-B: auth-gated shell — credentials + OAuth sign-in against the shared API,
-// JWT stored in secure store. P12 builds the full native User Portal.
+// Full native User Portal (P12). StripeProvider enables the card-on-file
+// PaymentSheet for the per-post publish charge; the publishable key is public.
+const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
+
 export default function App() {
   return (
-    <AuthProvider>
-      <SafeAreaView style={styles.root}>
-        <RootNavigator />
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </AuthProvider>
+    <StripeProvider publishableKey={stripePublishableKey}>
+      <AuthProvider>
+        <SafeAreaView style={styles.root}>
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </SafeAreaView>
+      </AuthProvider>
+    </StripeProvider>
   );
 }
 

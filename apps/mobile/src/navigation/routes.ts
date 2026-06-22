@@ -14,6 +14,8 @@ export type Route =
   | { name: 'proposeTrade'; mode: 'new'; listingId: string }
   | { name: 'proposeTrade'; mode: 'counter'; proposalId: string }
   | { name: 'blocks' }
+  | { name: 'publish'; listingId: string }
+  | { name: 'paymentMethod' }
   | { name: 'account' };
 
 export type TabKey = 'home' | 'browse' | 'trades' | 'account';
