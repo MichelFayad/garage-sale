@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Admin user management: search, then suspend/ban/reactivate or toggle trust.
 // Status/trust mutations require OPERATIONS; the API enforces it (UI just calls).
@@ -61,7 +61,7 @@ export function UsersClient() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search email or name…"
+          placeholder="Search email or nameâ€¦"
           className="flex-1 rounded border border-gray-300 px-3 py-2"
         />
         <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
@@ -113,14 +113,14 @@ export function UsersClient() {
                     </button>
                   </>
                 ) : (
-                  <span className="text-xs text-gray-400">view only</span>
+                  <span className="text-xs text-gray-500">view only</span>
                 )}
               </td>
             </tr>
           ))}
           {rows.length === 0 && !error && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-gray-400">
+              <td colSpan={5} className="py-6 text-center text-gray-500">
                 No users.
               </td>
             </tr>

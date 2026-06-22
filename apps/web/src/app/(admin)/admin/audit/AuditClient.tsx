@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Audit log viewer (OPERATIONS+). Read-only stream of staff actions, newest first,
 // optionally filtered by entity type. Cursor-paged via "Load more".
@@ -49,7 +49,7 @@ export function AuditClient() {
         <input
           value={entityType}
           onChange={(e) => setEntityType(e.target.value)}
-          placeholder="Filter by entity type (User, Listing, …)"
+          placeholder="Filter by entity type (User, Listing, â€¦)"
           className="w-80 rounded border border-gray-300 px-3 py-2"
         />
       </div>
@@ -69,7 +69,7 @@ export function AuditClient() {
             <tr key={r.id} className="border-t border-gray-100">
               <td className="py-2 whitespace-nowrap">{new Date(r.createdAt).toLocaleString()}</td>
               <td>
-                {r.admin.displayName} <span className="text-gray-400">({r.admin.role})</span>
+                {r.admin.displayName} <span className="text-gray-500">({r.admin.role})</span>
               </td>
               <td className="font-mono">
                 {r.entityType}:{r.entityId.slice(0, 8)}

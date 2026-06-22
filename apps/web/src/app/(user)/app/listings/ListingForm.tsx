@@ -191,6 +191,7 @@ export function ListingForm({ initial }: { initial?: ListingFormValues }) {
             />
             <button
               type="button"
+              aria-label={`Remove photo ${i + 1}`}
               onClick={() =>
                 set(
                   'photos',
@@ -199,7 +200,7 @@ export function ListingForm({ initial }: { initial?: ListingFormValues }) {
               }
               className="rounded border border-gray-300 px-3 text-gray-500"
             >
-              ✕
+              <span aria-hidden="true">✕</span>
             </button>
           </div>
         ))}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -80,17 +80,17 @@ export function TradeThread({ id }: { id: string }) {
   }
 
   if (error) return <p className="text-gray-600">{error}</p>;
-  if (!proposal) return <p className="text-gray-600">Loading…</p>;
+  if (!proposal) return <p className="text-gray-600">Loadingâ€¦</p>;
 
   return (
     <div className="space-y-4">
       <div>
         <Link href="/app/trades" className="text-sm text-gray-500 hover:underline">
-          ← Trades
+          â† Trades
         </Link>
         <h1 className="mt-1 text-xl font-semibold">{proposal.listing.title}</h1>
         <p className="text-sm text-gray-500">
-          {proposal.status} · offered: {proposal.items.map((i) => i.listing.title).join(', ')}
+          {proposal.status} Â· offered: {proposal.items.map((i) => i.listing.title).join(', ')}
         </p>
       </div>
 
@@ -98,7 +98,9 @@ export function TradeThread({ id }: { id: string }) {
         <div className="rounded border border-gray-200 p-4">
           <p className="text-sm text-gray-600">Confirmations: {proposal.confirmations.length}/2</p>
           {proposal.confirmations.some((c) => c.userId === me) ? (
-            <p className="text-sm text-green-700">✓ You confirmed. Waiting for the other trader.</p>
+            <p className="text-sm text-green-700">
+              âœ“ You confirmed. Waiting for the other trader.
+            </p>
           ) : (
             <button
               onClick={confirm}
@@ -112,7 +114,7 @@ export function TradeThread({ id }: { id: string }) {
 
       {proposal.status === 'COMPLETED' &&
         (proposal.ratings.some((r) => r.raterId === me) ? (
-          <p className="text-sm text-green-700">✓ Trade completed — you rated this trade.</p>
+          <p className="text-sm text-green-700">âœ“ Trade completed â€” you rated this trade.</p>
         ) : (
           <form onSubmit={submitRating} className="space-y-2 rounded border border-gray-200 p-4">
             <p className="font-medium">Rate this trade</p>
@@ -145,7 +147,7 @@ export function TradeThread({ id }: { id: string }) {
         ))}
 
       <div className="space-y-2 rounded border border-gray-200 p-4">
-        {messages.length === 0 && <p className="text-sm text-gray-400">No messages yet.</p>}
+        {messages.length === 0 && <p className="text-sm text-gray-500">No messages yet.</p>}
         {messages.map((m) => (
           <div key={m.id} className={m.senderId === me ? 'text-right' : ''}>
             <span className="inline-block rounded bg-gray-100 px-3 py-1 text-sm">
@@ -165,7 +167,7 @@ export function TradeThread({ id }: { id: string }) {
           <input
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Message…"
+            placeholder="Messageâ€¦"
             maxLength={2000}
             className="flex-1 rounded border border-gray-300 px-3 py-2"
           />

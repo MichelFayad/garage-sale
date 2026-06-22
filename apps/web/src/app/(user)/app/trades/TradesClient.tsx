@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -47,7 +47,7 @@ export function TradesClient() {
     }
   }
 
-  if (!proposals) return <p className="text-gray-600">{error ?? 'Loading…'}</p>;
+  if (!proposals) return <p className="text-gray-600">{error ?? 'Loadingâ€¦'}</p>;
   if (proposals.length === 0) return <p className="text-gray-600">No trades yet.</p>;
 
   return (
@@ -65,7 +65,7 @@ export function TradesClient() {
               <span className={`rounded px-2 py-0.5 text-xs ${STATUS_STYLE[p.status] ?? ''}`}>
                 {p.status}
               </span>
-              <span className="text-xs text-gray-400">{isOwner ? 'incoming' : 'outgoing'}</span>
+              <span className="text-xs text-gray-500">{isOwner ? 'incoming' : 'outgoing'}</span>
             </div>
             <p className="mt-1 text-sm text-gray-500">
               Offered: {p.items.map((i) => i.listing.title).join(', ')}

@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-// Untrusted-flag review. Clear (restores TRUSTED if it was the last active flag —
+// Untrusted-flag review. Clear (restores TRUSTED if it was the last active flag â€”
 // handled API-side) or escalate. Mirrors the report queue layout.
 
 import { useCallback, useEffect, useState } from 'react';
@@ -47,7 +47,7 @@ export function FlagsClient() {
           <li key={f.id} className="rounded border border-gray-200 p-3 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">{f.user.displayName}</span>
-              <span className="text-gray-400">{new Date(f.createdAt).toLocaleDateString()}</span>
+              <span className="text-gray-500">{new Date(f.createdAt).toLocaleDateString()}</span>
             </div>
             <p className="mt-1 text-gray-700">{f.reason}</p>
             <p className="mt-1 text-gray-500">trust: {f.user.trustStatus}</p>
@@ -70,7 +70,7 @@ export function FlagsClient() {
           </li>
         ))}
         {rows.length === 0 && (
-          <li className="py-6 text-center text-gray-400">No {tab.toLowerCase()} flags.</li>
+          <li className="py-6 text-center text-gray-500">No {tab.toLowerCase()} flags.</li>
         )}
       </ul>
     </section>

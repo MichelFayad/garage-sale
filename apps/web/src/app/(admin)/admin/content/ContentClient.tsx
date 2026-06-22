@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // CMS page management (P10): list all pages (draft + published), create a new
 // page, edit an existing one (title/description/Markdown body), toggle publish
@@ -81,7 +81,7 @@ export function ContentClient() {
     <section className="py-6">
       <h1 className="text-2xl font-semibold">Content pages</h1>
       {!editable && (
-        <p className="mt-1 text-sm text-gray-500">View only — editing requires OPERATIONS.</p>
+        <p className="mt-1 text-sm text-gray-500">View only â€” editing requires OPERATIONS.</p>
       )}
 
       {editable && (
@@ -111,7 +111,7 @@ export function ContentClient() {
           <textarea
             value={draft.body}
             onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-            placeholder="Markdown body…"
+            placeholder="Markdown bodyâ€¦"
             rows={6}
             className="rounded border border-gray-300 px-3 py-2 font-mono text-sm"
           />
@@ -143,7 +143,7 @@ export function ContentClient() {
                 <button
                   onClick={() => togglePublish(p)}
                   disabled={!editable}
-                  className={`text-xs ${p.status === 'PUBLISHED' ? 'text-green-700' : 'text-gray-400'} hover:underline disabled:no-underline disabled:cursor-default`}
+                  className={`text-xs ${p.status === 'PUBLISHED' ? 'text-green-700' : 'text-gray-500'} hover:underline disabled:no-underline disabled:cursor-default`}
                 >
                   {p.status}
                 </button>

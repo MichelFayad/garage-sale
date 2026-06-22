@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Report queue: open reports with resolve/dismiss. Resolving records the handling
 // admin (API) and drops the row from the OPEN view.
@@ -47,9 +47,9 @@ export function ReportsClient() {
           <li key={r.id} className="rounded border border-gray-200 p-3 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">
-                {r.targetType} · {r.targetId}
+                {r.targetType} Â· {r.targetId}
               </span>
-              <span className="text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
+              <span className="text-gray-500">{new Date(r.createdAt).toLocaleDateString()}</span>
             </div>
             <p className="mt-1 text-gray-700">{r.reason}</p>
             <p className="mt-1 text-gray-500">by {r.reporter.displayName}</p>
@@ -72,7 +72,7 @@ export function ReportsClient() {
           </li>
         ))}
         {rows.length === 0 && (
-          <li className="py-6 text-center text-gray-400">No {tab.toLowerCase()} reports.</li>
+          <li className="py-6 text-center text-gray-500">No {tab.toLowerCase()} reports.</li>
         )}
       </ul>
     </section>

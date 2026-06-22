@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Admin trade oversight: filter proposals by status; expand a row to see items,
 // confirmations, ratings, and the message thread. Read-only.
@@ -59,7 +59,7 @@ export function TradesClient() {
         <thead className="text-left text-gray-500">
           <tr>
             <th className="py-2">Listing</th>
-            <th>Proposer → Owner</th>
+            <th>Proposer â†’ Owner</th>
             <th>Status</th>
             <th></th>
           </tr>
@@ -69,7 +69,7 @@ export function TradesClient() {
             <tr key={r.id} className="border-t border-gray-100">
               <td className="py-2">{r.listing.title}</td>
               <td>
-                {r.proposer.displayName} → {r.owner.displayName}
+                {r.proposer.displayName} â†’ {r.owner.displayName}
               </td>
               <td>{r.status}</td>
               <td>
@@ -84,7 +84,7 @@ export function TradesClient() {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-6 text-center text-gray-400">
+              <td colSpan={4} className="py-6 text-center text-gray-500">
                 No trades.
               </td>
             </tr>
@@ -96,15 +96,16 @@ export function TradesClient() {
         <div className="mt-6 rounded border border-gray-200 p-4 text-sm">
           <div className="flex justify-between">
             <h2 className="font-medium">{detail.listing.title}</h2>
-            <button onClick={() => setDetail(null)} className="text-gray-400 hover:underline">
+            <button onClick={() => setDetail(null)} className="text-gray-500 hover:underline">
               Close
             </button>
           </div>
           <p className="mt-1 text-gray-500">
-            {detail.status} · offered: {detail.items.map((i) => i.listing.title).join(', ') || '—'}
+            {detail.status} Â· offered:{' '}
+            {detail.items.map((i) => i.listing.title).join(', ') || 'â€”'}
           </p>
           <p className="mt-1 text-gray-500">
-            Confirmations: {detail.confirmations.length}/2 · Ratings: {detail.ratings.length}
+            Confirmations: {detail.confirmations.length}/2 Â· Ratings: {detail.ratings.length}
           </p>
           <div className="mt-3 space-y-1">
             {detail.messages.map((m) => (
@@ -113,7 +114,7 @@ export function TradesClient() {
                 {m.body}
               </p>
             ))}
-            {detail.messages.length === 0 && <p className="text-gray-400">No messages.</p>}
+            {detail.messages.length === 0 && <p className="text-gray-500">No messages.</p>}
           </div>
         </div>
       )}

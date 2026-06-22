@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Category management: create, rename, reorder (sortOrder), enable/disable, and
 // edit prohibited keywords (comma-separated). Disabled categories are hidden from
@@ -48,7 +48,7 @@ export function CategoriesClient() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="New category name…"
+            placeholder="New category nameâ€¦"
             className="flex-1 rounded border border-gray-300 px-3 py-2"
           />
           <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
@@ -96,7 +96,7 @@ export function CategoriesClient() {
                 <button
                   onClick={() => update(c.id, { enabled: !c.enabled })}
                   disabled={!editable}
-                  className={`text-xs ${c.enabled ? 'text-green-700' : 'text-gray-400'} hover:underline disabled:no-underline disabled:cursor-default`}
+                  className={`text-xs ${c.enabled ? 'text-green-700' : 'text-gray-500'} hover:underline disabled:no-underline disabled:cursor-default`}
                 >
                   {c.enabled ? 'Enabled' : 'Disabled'}
                 </button>

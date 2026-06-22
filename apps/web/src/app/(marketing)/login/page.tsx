@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LoginForm } from './LoginForm';
 import { OAuthButtons } from '../_components/OAuthButtons';
@@ -43,7 +43,7 @@ export default async function LoginPage({
           Create account
         </Link>
       </div>
-      <div className="my-6 flex items-center gap-3 text-xs text-gray-400">
+      <div className="my-6 flex items-center gap-3 text-xs text-gray-500">
         <span className="h-px flex-1 bg-gray-200" />
         OR
         <span className="h-px flex-1 bg-gray-200" />

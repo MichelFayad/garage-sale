@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // Admin listing moderation: filter by status / title, force-remove with a reason.
 
@@ -43,7 +43,7 @@ export function ListingsClient() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title…"
+          placeholder="Search titleâ€¦"
           className="flex-1 rounded border border-gray-300 px-3 py-2"
         />
         <select
@@ -94,7 +94,7 @@ export function ListingsClient() {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-gray-400">
+              <td colSpan={5} className="py-6 text-center text-gray-500">
                 No listings.
               </td>
             </tr>
