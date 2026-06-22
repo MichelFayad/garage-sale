@@ -6,6 +6,7 @@
 
 body {
   @apply antialiased;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Visible keyboard focus on every interactive element (WCAG 2.4.7 Focus Visible). */

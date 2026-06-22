@@ -1,7 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { SITE } from '../lib/site';
 import { Analytics } from '../components/Analytics';
 import './globals.css';
+
+// Self-hosted, swap-displayed font — no external request, no layout shift (CLS).
+// Exposed as a CSS variable so Tailwind/globals can pick it up.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
 
 // Global SEO defaults. Per-page metadata (title/description) merges over these;
 // the title template appends "· Garage Sale". OpenGraph/Twitter/robots cascade
@@ -39,9 +44,15 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: '#111827',
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body>
         {children}
         <Analytics />
