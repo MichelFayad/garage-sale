@@ -14,8 +14,18 @@ function authorized(req: NextRequest): boolean {
   return req.headers.get('authorization') === `Bearer ${secret}`;
 }
 
-export async function POST(req: NextRequest) {
+async function run(req: NextRequest) {
   if (!authorized(req)) return new NextResponse('Unauthorized', { status: 401 });
   const result = await sweepUntrustedFlags(prisma);
   return NextResponse.json(result);
+}
+
+// GET: Vercel Cron (it auto-sends `Authorization: Bearer ${CRON_SECRET}`).
+// POST: GitHub Action fallback / manual invocation.
+export async function GET(req: NextRequest) {
+  return run(req);
+}
+
+export async function POST(req: NextRequest) {
+  return run(req);
 }

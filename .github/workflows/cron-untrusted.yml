@@ -1,0 +1,21 @@
+# Fallback scheduler for the untrusted-flag sweep (the primary scheduler is
+# Vercel Cron, see apps/web/vercel.json). Posts to the cron endpoint with the
+# shared secret. Configure repo secrets APP_URL and CRON_SECRET.
+name: Cron — untrusted sweep
+
+on:
+  schedule:
+    - cron: '30 8 * * *' # daily, 30m after Vercel Cron as a safety net
+  workflow_dispatch: # allow manual runs
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit untrusted sweep endpoint
+        run: |
+          curl -fsS -X POST "${APP_URL}/api/cron/untrusted" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
