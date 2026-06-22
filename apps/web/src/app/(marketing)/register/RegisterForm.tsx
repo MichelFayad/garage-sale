@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TRPCClientError } from '@trpc/client';
 import { trpc } from '../../../lib/trpc';
+import { track } from '../../../lib/analytics';
 import { Field, FormMessage, SubmitButton } from '../_components/fields';
 
 // Trader sign-up. On success the API emails a verification link and issues no
@@ -23,6 +24,7 @@ export function RegisterForm() {
         password: String(data.get('password')),
         displayName: String(data.get('displayName')),
       });
+      track('Signup');
       setDone(true);
     } catch (err) {
       setError(err instanceof TRPCClientError ? err.message : 'Registration failed');

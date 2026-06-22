@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE } from '../lib/site';
+import { Analytics } from '../components/Analytics';
 import './globals.css';
 
 // Global SEO defaults. Per-page metadata (title/description) merges over these;
@@ -41,7 +42,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
