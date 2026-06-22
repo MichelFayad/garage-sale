@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { LogoutButton } from '../../components/LogoutButton';
+import { SkipLink } from '../../components/SkipLink';
 
 // Trader portal shell — guarded (role=TRADER, account ACTIVE) by middleware.ts.
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
+      <SkipLink />
       <header className="border-b bg-gray-50">
-        <nav className="mx-auto max-w-5xl flex items-center gap-6 p-4 text-sm">
+        <nav aria-label="Main" className="mx-auto max-w-5xl flex items-center gap-6 p-4 text-sm">
           <Link href="/app" className="font-semibold">
             Garage Sale
           </Link>
@@ -19,7 +21,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
           <LogoutButton className="ml-auto text-gray-500 hover:underline" />
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl w-full flex-1 p-4">{children}</main>
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl w-full flex-1 p-4">
+        {children}
+      </main>
     </div>
   );
 }

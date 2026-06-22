@@ -7,3 +7,32 @@
 body {
   @apply antialiased;
 }
+
+/* Visible keyboard focus on every interactive element (WCAG 2.4.7 Focus Visible). */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip-to-content link: off-screen until focused (WCAG 2.4.1 Bypass Blocks). */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3.5rem;
+  z-index: 50;
+  border-radius: 0.25rem;
+  background: #111827;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+/* The skip target shouldn't show a focus ring when reached programmatically. */
+main:focus {
+  outline: none;
+}

@@ -3,6 +3,7 @@ import { type AdminTier, meetsTier } from '@garage-sale/core';
 import { getPrincipal } from '../../lib/principal';
 import { AdminRoleProvider } from '../../components/AdminRole';
 import { LogoutButton } from '../../components/LogoutButton';
+import { SkipLink } from '../../components/SkipLink';
 
 // Staff portal shell — guarded (admin roles SUPER/OPERATIONS/SUPPORT) by
 // middleware.ts. Admin staff authenticate with email/password only. Nav links
@@ -30,8 +31,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AdminRoleProvider role={role}>
       <div className="min-h-screen flex flex-col">
+        <SkipLink />
         <header className="border-b bg-slate-900 text-white">
-          <nav className="mx-auto max-w-6xl flex items-center gap-6 p-4 text-sm">
+          <nav aria-label="Main" className="mx-auto max-w-6xl flex items-center gap-6 p-4 text-sm">
             <Link href="/admin" className="font-semibold">
               Garage Sale · Admin
             </Link>
@@ -43,7 +45,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <LogoutButton className="ml-auto text-slate-300 hover:underline" />
           </nav>
         </header>
-        <main className="mx-auto max-w-6xl w-full flex-1 p-4">{children}</main>
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-6xl w-full flex-1 p-4">
+          {children}
+        </main>
       </div>
     </AdminRoleProvider>
   );

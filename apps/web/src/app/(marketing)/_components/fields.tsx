@@ -38,5 +38,10 @@ export function FormMessage({
   children: ReactNode;
 }) {
   const color = tone === 'error' ? 'text-red-600' : 'text-green-700';
-  return <p className={`text-sm ${color}`}>{children}</p>;
+  // Announce validation/result messages to assistive tech (WCAG 4.1.3).
+  return (
+    <p role={tone === 'error' ? 'alert' : 'status'} className={`text-sm ${color}`}>
+      {children}
+    </p>
+  );
 }

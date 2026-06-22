@@ -165,7 +165,7 @@ export function ContentClient() {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-4 text-gray-400">
+              <td colSpan={5} className="py-4 text-gray-500">
                 No content pages yet.
               </td>
             </tr>
