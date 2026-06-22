@@ -5,10 +5,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Setting = Awaited<ReturnType<typeof trpc.admin.settings.list.query>>[number];
 
 export function SettingsClient() {
+  const editable = useCan()('SUPER');
   const [rows, setRows] = useState<Setting[]>([]);
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
@@ -58,49 +60,56 @@ export function SettingsClient() {
                 <input
                   defaultValue={JSON.stringify(s.value)}
                   id={`set-${s.id}`}
-                  className="w-full rounded border border-gray-200 px-2 py-1 font-mono"
+                  disabled={!editable}
+                  className="w-full rounded border border-gray-200 px-2 py-1 font-mono disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </td>
               <td>
-                <button
-                  onClick={() => {
-                    const el = document.getElementById(`set-${s.id}`) as HTMLInputElement | null;
-                    if (el) void save(s.key, el.value);
-                  }}
-                  className="text-xs text-blue-700 hover:underline"
-                >
-                  Save
-                </button>
+                {editable && (
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById(`set-${s.id}`) as HTMLInputElement | null;
+                      if (el) void save(s.key, el.value);
+                    }}
+                    className="text-xs text-blue-700 hover:underline"
+                  >
+                    Save
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <h2 className="mt-8 font-medium">Add / overwrite</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (key.trim()) void save(key.trim(), value);
-        }}
-        className="mt-2 flex gap-2"
-      >
-        <input
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          placeholder="key"
-          className="w-48 rounded border border-gray-300 px-3 py-2 font-mono"
-        />
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="value as JSON e.g. 7"
-          className="flex-1 rounded border border-gray-300 px-3 py-2 font-mono"
-        />
-        <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-          Set
-        </button>
-      </form>
+      {editable && (
+        <>
+          <h2 className="mt-8 font-medium">Add / overwrite</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (key.trim()) void save(key.trim(), value);
+            }}
+            className="mt-2 flex gap-2"
+          >
+            <input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="key"
+              className="w-48 rounded border border-gray-300 px-3 py-2 font-mono"
+            />
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="value as JSON e.g. 7"
+              className="flex-1 rounded border border-gray-300 px-3 py-2 font-mono"
+            />
+            <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
+              Set
+            </button>
+          </form>
+        </>
+      )}
     </section>
   );
 }

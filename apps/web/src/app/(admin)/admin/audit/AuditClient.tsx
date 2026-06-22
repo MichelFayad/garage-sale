@@ -5,11 +5,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Page = Awaited<ReturnType<typeof trpc.admin.audit.list.query>>;
 type Row = Page['items'][number];
 
 export function AuditClient() {
+  const canView = useCan()('OPERATIONS');
   const [entityType, setEntityType] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -27,9 +29,18 @@ export function AuditClient() {
   );
 
   useEffect(() => {
-    void load(true);
+    if (canView) void load(true);
     // Reset-load is keyed on the filter; cursor paging is driven by "Load more".
-  }, [entityType]);
+  }, [entityType, canView]);
+
+  if (!canView) {
+    return (
+      <section className="py-6">
+        <h1 className="text-2xl font-semibold">Audit log</h1>
+        <p className="mt-2 text-gray-500">Requires OPERATIONS role.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="py-6">

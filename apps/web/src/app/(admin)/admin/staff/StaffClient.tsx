@@ -5,12 +5,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Admin = Awaited<ReturnType<typeof trpc.admin.admins.list.query>>[number];
 const ROLES = ['SUPER', 'OPERATIONS', 'SUPPORT'] as const;
 const STATUSES = ['ACTIVE', 'SUSPENDED', 'BANNED'] as const;
 
 export function StaffClient() {
+  const isSuper = useCan()('SUPER');
   const [rows, setRows] = useState<Admin[]>([]);
   const [form, setForm] = useState({ email: '', displayName: '', role: 'SUPPORT', password: '' });
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +26,8 @@ export function StaffClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (isSuper) void load();
+  }, [isSuper, load]);
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +58,15 @@ export function StaffClient() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update');
     }
+  }
+
+  if (!isSuper) {
+    return (
+      <section className="py-6">
+        <h1 className="text-2xl font-semibold">Staff</h1>
+        <p className="mt-2 text-gray-500">Requires SUPER role.</p>
+      </section>
+    );
   }
 
   return (

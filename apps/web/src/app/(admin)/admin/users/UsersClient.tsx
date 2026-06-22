@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Page = Awaited<ReturnType<typeof trpc.admin.users.list.query>>;
 type Row = Page['items'][number];
@@ -12,6 +13,7 @@ type Row = Page['items'][number];
 const STATUSES = ['ACTIVE', 'SUSPENDED', 'BANNED'] as const;
 
 export function UsersClient() {
+  const can = useCan();
   const [query, setQuery] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -92,21 +94,27 @@ export function UsersClient() {
                 {Number(row.ratingAvg).toFixed(2)} ({row.ratingCount})
               </td>
               <td className="space-x-2 whitespace-nowrap">
-                {STATUSES.filter((s) => s !== row.accountStatus).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setStatus(row.id, s)}
-                    className="text-xs text-blue-700 hover:underline"
-                  >
-                    {s === 'ACTIVE' ? 'Reactivate' : s.toLowerCase()}
-                  </button>
-                ))}
-                <button
-                  onClick={() => toggleTrust(row)}
-                  className="text-xs text-amber-700 hover:underline"
-                >
-                  {row.trustStatus === 'TRUSTED' ? 'flag untrusted' : 'clear trust'}
-                </button>
+                {can('OPERATIONS') ? (
+                  <>
+                    {STATUSES.filter((s) => s !== row.accountStatus).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setStatus(row.id, s)}
+                        className="text-xs text-blue-700 hover:underline"
+                      >
+                        {s === 'ACTIVE' ? 'Reactivate' : s.toLowerCase()}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => toggleTrust(row)}
+                      className="text-xs text-amber-700 hover:underline"
+                    >
+                      {row.trustStatus === 'TRUSTED' ? 'flag untrusted' : 'clear trust'}
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-xs text-gray-400">view only</span>
+                )}
               </td>
             </tr>
           ))}

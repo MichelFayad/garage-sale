@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Page = Awaited<ReturnType<typeof trpc.admin.listings.list.query>>;
 type Row = Page['items'][number];
@@ -11,6 +12,7 @@ type Row = Page['items'][number];
 const STATUSES = ['DRAFT', 'PENDING_PAYMENT', 'ACTIVE', 'LOCKED', 'COMPLETED', 'REMOVED'] as const;
 
 export function ListingsClient() {
+  const can = useCan();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<string>('');
   const [rows, setRows] = useState<Row[]>([]);
@@ -79,7 +81,7 @@ export function ListingsClient() {
               <td>{row.category.name}</td>
               <td>{row.status}</td>
               <td>
-                {row.status !== 'REMOVED' && (
+                {can('OPERATIONS') && row.status !== 'REMOVED' && (
                   <button
                     onClick={() => remove(row.id)}
                     className="text-xs text-red-700 hover:underline"

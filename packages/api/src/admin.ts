@@ -6,15 +6,12 @@
 import { TRPCError } from '@trpc/server';
 import { AccountStatus, EmailType, type PrismaClient } from '@garage-sale/db';
 import type { Role } from '@garage-sale/auth';
+import { type AdminTier, meetsTier } from '@garage-sale/core';
 import { sendEmail } from './email.js';
 
-/** Capability tiers. Higher tiers inherit everything below them. */
-const ROLE_RANK = { SUPPORT: 1, OPERATIONS: 2, SUPER: 3 } as const;
-type Tier = keyof typeof ROLE_RANK;
-
-/** Throw FORBIDDEN unless the caller's role meets the minimum tier. */
-export function requireTier(role: Role, min: Tier): void {
-  if ((ROLE_RANK[role as Tier] ?? 0) < ROLE_RANK[min]) {
+/** Throw FORBIDDEN unless the caller's role meets the minimum tier (see core/roles). */
+export function requireTier(role: Role, min: AdminTier): void {
+  if (!meetsTier(role, min)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: `Requires ${min} role` });
   }
 }

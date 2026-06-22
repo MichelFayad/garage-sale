@@ -6,10 +6,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type Category = Awaited<ReturnType<typeof trpc.admin.categories.list.query>>[number];
 
 export function CategoriesClient() {
+  const editable = useCan()('OPERATIONS');
   const [rows, setRows] = useState<Category[]>([]);
   const [name, setName] = useState('');
 
@@ -41,17 +43,19 @@ export function CategoriesClient() {
     <section className="py-6">
       <h1 className="text-2xl font-semibold">Categories</h1>
 
-      <form onSubmit={create} className="mt-4 flex gap-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="New category name…"
-          className="flex-1 rounded border border-gray-300 px-3 py-2"
-        />
-        <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-          Add
-        </button>
-      </form>
+      {editable && (
+        <form onSubmit={create} className="mt-4 flex gap-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="New category name…"
+            className="flex-1 rounded border border-gray-300 px-3 py-2"
+          />
+          <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
+            Add
+          </button>
+        </form>
+      )}
 
       <table className="mt-4 w-full text-sm">
         <thead className="text-left text-gray-500">
@@ -69,27 +73,30 @@ export function CategoriesClient() {
                 <input
                   type="number"
                   defaultValue={c.sortOrder}
+                  disabled={!editable}
                   onBlur={(e) => {
                     const v = Number(e.target.value);
                     if (v !== c.sortOrder) void update(c.id, { sortOrder: v });
                   }}
-                  className="w-16 rounded border border-gray-200 px-2 py-1"
+                  className="w-16 rounded border border-gray-200 px-2 py-1 disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </td>
               <td className="py-2">
                 <input
                   defaultValue={c.name}
+                  disabled={!editable}
                   onBlur={(e) => {
                     if (e.target.value.trim() && e.target.value !== c.name)
                       void update(c.id, { name: e.target.value.trim() });
                   }}
-                  className="rounded border border-gray-200 px-2 py-1"
+                  className="rounded border border-gray-200 px-2 py-1 disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </td>
               <td className="py-2">
                 <button
                   onClick={() => update(c.id, { enabled: !c.enabled })}
-                  className={`text-xs ${c.enabled ? 'text-green-700' : 'text-gray-400'} hover:underline`}
+                  disabled={!editable}
+                  className={`text-xs ${c.enabled ? 'text-green-700' : 'text-gray-400'} hover:underline disabled:no-underline disabled:cursor-default`}
                 >
                   {c.enabled ? 'Enabled' : 'Disabled'}
                 </button>
@@ -98,6 +105,7 @@ export function CategoriesClient() {
                 <input
                   defaultValue={c.prohibitedKeywords.join(', ')}
                   placeholder="comma,separated"
+                  disabled={!editable}
                   onBlur={(e) => {
                     const next = e.target.value
                       .split(',')
@@ -106,7 +114,7 @@ export function CategoriesClient() {
                     if (next.join(',') !== c.prohibitedKeywords.join(','))
                       void update(c.id, { prohibitedKeywords: next });
                   }}
-                  className="w-full rounded border border-gray-200 px-2 py-1"
+                  className="w-full rounded border border-gray-200 px-2 py-1 disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </td>
             </tr>

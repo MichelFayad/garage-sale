@@ -4,4 +4,5 @@
 export * from './constants.js';
 export * from './fee.js';
 export * from './listing.js';
+export * from './roles.js';
 export * from './trust.js';

@@ -5,10 +5,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
+import { useCan } from '../../../../components/AdminRole';
 
 type History = Awaited<ReturnType<typeof trpc.admin.fee.history.query>>;
 
 export function FeeClient() {
+  const canEdit = useCan()('SUPER');
   const [current, setCurrent] = useState<number | null>(null);
   const [history, setHistory] = useState<History>([]);
   const [dollars, setDollars] = useState('');
@@ -52,21 +54,23 @@ export function FeeClient() {
         <strong>{current === null ? '—' : `$${(current / 100).toFixed(2)}`}</strong>
       </p>
 
-      <form onSubmit={save} className="mt-4 flex items-center gap-2">
-        <span>$</span>
-        <input
-          value={dollars}
-          onChange={(e) => setDollars(e.target.value)}
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="2.00"
-          className="w-32 rounded border border-gray-300 px-3 py-2"
-        />
-        <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-          Set fee
-        </button>
-      </form>
+      {canEdit && (
+        <form onSubmit={save} className="mt-4 flex items-center gap-2">
+          <span>$</span>
+          <input
+            value={dollars}
+            onChange={(e) => setDollars(e.target.value)}
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="2.00"
+            className="w-32 rounded border border-gray-300 px-3 py-2"
+          />
+          <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
+            Set fee
+          </button>
+        </form>
+      )}
       {error && <p className="mt-2 text-red-600">{error}</p>}
 
       <h2 className="mt-8 font-medium">History</h2>
