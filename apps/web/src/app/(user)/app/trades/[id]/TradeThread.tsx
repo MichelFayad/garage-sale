@@ -14,6 +14,7 @@ export function TradeThread({ id }: { id: string }) {
   const [body, setBody] = useState('');
   const [stars, setStars] = useState(5);
   const [review, setReview] = useState('');
+  const [blocked, setBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -26,6 +27,8 @@ export function TradeThread({ id }: { id: string }) {
       setProposal(p);
       setMessages(m);
       setMe(profile.id);
+      const other = p.proposerId === profile.id ? p.ownerId : p.proposerId;
+      setBlocked((await trpc.blocks.status.query({ userId: other })).blocked);
     } catch {
       setError('Trade not found');
     }
@@ -62,6 +65,18 @@ export function TradeThread({ id }: { id: string }) {
     if (!reason) return;
     await trpc.trades.report.mutate({ targetType: 'USER', targetId: other, reason });
     window.alert('Reported. Thank you.');
+  }
+
+  async function toggleBlock() {
+    if (!proposal) return;
+    const other = proposal.proposerId === me ? proposal.ownerId : proposal.proposerId;
+    if (blocked) {
+      await trpc.blocks.unblock.mutate({ userId: other });
+    } else {
+      const reason = window.prompt('Reason for blocking? (optional)') ?? undefined;
+      await trpc.blocks.block.mutate({ userId: other, reason: reason || undefined });
+    }
+    await load();
   }
 
   if (error) return <p className="text-gray-600">{error}</p>;
@@ -141,22 +156,33 @@ export function TradeThread({ id }: { id: string }) {
         ))}
       </div>
 
-      <form onSubmit={send} className="flex gap-2">
-        <input
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Message…"
-          maxLength={2000}
-          className="flex-1 rounded border border-gray-300 px-3 py-2"
-        />
-        <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-white">
-          Send
-        </button>
-      </form>
+      {blocked ? (
+        <p className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+          You&apos;ve blocked this trader (or they blocked you). Messaging is disabled.
+        </p>
+      ) : (
+        <form onSubmit={send} className="flex gap-2">
+          <input
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Message…"
+            maxLength={2000}
+            className="flex-1 rounded border border-gray-300 px-3 py-2"
+          />
+          <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-white">
+            Send
+          </button>
+        </form>
+      )}
 
-      <button onClick={reportUser} className="text-sm text-red-600 hover:underline">
-        Report other trader
-      </button>
+      <div className="flex gap-4">
+        <button onClick={reportUser} className="text-sm text-red-600 hover:underline">
+          Report other trader
+        </button>
+        <button onClick={toggleBlock} className="text-sm text-gray-600 hover:underline">
+          {blocked ? 'Unblock trader' : 'Block trader'}
+        </button>
+      </div>
     </div>
   );
 }

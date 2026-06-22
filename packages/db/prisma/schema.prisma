@@ -151,6 +151,8 @@ model User {
   reports           Report[]
   watchlist         Watchlist[]
   emailLogs         EmailLog[]
+  blocksMade        Block[]             @relation("BlocksMade")
+  blocksReceived    Block[]             @relation("BlocksReceived")
 }
 
 /// Links a social login to one User (by verified email).
@@ -417,6 +419,21 @@ model Watchlist {
 
   @@unique([userId, listingId])
   @@index([listingId])
+}
+
+/// One trader blocking another. Directional record (blocker → blocked) but the API
+/// enforces it mutually: neither party can propose to or message the other.
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // ─── Ops & content ──────────────────────────────────────────

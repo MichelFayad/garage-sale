@@ -13,6 +13,7 @@ import {
 } from '@garage-sale/db';
 import { protectedProcedure, router } from '../trpc.js';
 import { appBaseUrl, sendEmail } from '../email.js';
+import { assertNotBlocked } from '../blocks.js';
 
 function traderOnly(role: string) {
   if (role !== 'TRADER') {
@@ -110,6 +111,7 @@ export const tradesRouter = router({
       if (target.ownerId === ctx.principal.userId) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot propose on your own listing' });
       }
+      await assertNotBlocked(ctx.prisma, ctx.principal.userId, target.ownerId);
       const items = await validateOfferedItems(
         ctx.prisma,
         ctx.principal.userId,
@@ -213,6 +215,7 @@ export const tradesRouter = router({
       }
       const otherParty =
         original.proposerId === ctx.principal.userId ? original.ownerId : original.proposerId;
+      await assertNotBlocked(ctx.prisma, ctx.principal.userId, otherParty);
       const items = await validateOfferedItems(
         ctx.prisma,
         ctx.principal.userId,
@@ -396,6 +399,9 @@ export const tradesRouter = router({
         input.proposalId,
         ctx.principal.userId,
       );
+      const otherParty =
+        proposal.proposerId === ctx.principal.userId ? proposal.ownerId : proposal.proposerId;
+      await assertNotBlocked(ctx.prisma, ctx.principal.userId, otherParty);
       const message = await ctx.prisma.message.create({
         data: {
           proposalId: input.proposalId,
@@ -404,11 +410,9 @@ export const tradesRouter = router({
         },
         include: { sender: { select: { id: true, displayName: true } } },
       });
-      const recipient =
-        proposal.proposerId === ctx.principal.userId ? proposal.ownerId : proposal.proposerId;
       await notify(
         ctx.prisma,
-        recipient,
+        otherParty,
         EmailType.NEW_MESSAGE,
         'New message about your trade',
         `${message.sender.displayName} sent you a message: ${tradeLink(proposal.id)}`,
