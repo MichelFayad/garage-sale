@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Pricing',
   description: 'Garage Sale charges one small flat fee per published listing. Trading is free.',
+  alternates: { canonical: '/pricing' },
 };
 
 export default function PricingPage() {

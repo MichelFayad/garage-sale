@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'How it works',
   description: 'List what you have, find what you want, and trade locally on Garage Sale.',
+  alternates: { canonical: '/how-it-works' },
 };
 
 const STEPS = [
