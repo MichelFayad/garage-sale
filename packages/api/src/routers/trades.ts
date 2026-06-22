@@ -13,6 +13,7 @@ import {
 } from '@garage-sale/db';
 import { protectedProcedure, router } from '../trpc.js';
 import { appBaseUrl, sendEmail } from '../email.js';
+import { sendPush } from '../push.js';
 import { assertNotBlocked } from '../blocks.js';
 
 function traderOnly(role: string) {
@@ -31,6 +32,8 @@ async function notify(
 ): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
   if (user) await sendEmail(prisma, { type, toEmail: user.email, userId, subject, body });
+  // Mirror the email to the user's mobile devices (no-op when none registered).
+  await sendPush(prisma, userId, subject, body);
 }
 
 function tradeLink(proposalId: string): string {
