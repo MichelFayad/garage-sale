@@ -8,7 +8,10 @@ import { ListingDetailScreen } from '../screens/ListingDetailScreen';
 import { MyListingsScreen } from '../screens/MyListingsScreen';
 import { ListingFormScreen } from '../screens/ListingFormScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
+import { TradesScreen } from '../screens/TradesScreen';
+import { TradeDetailScreen } from '../screens/TradeDetailScreen';
+import { ProposeTradeScreen } from '../screens/ProposeTradeScreen';
+import { BlocksScreen } from '../screens/BlocksScreen';
 import { colors } from '../components/ui';
 
 // Authenticated shell: a lightweight custom tab bar over an in-memory screen
@@ -23,6 +26,9 @@ const TITLES: Record<Route['name'], string> = {
   listingForm: 'Listing',
   watchlist: 'Watchlist',
   trades: 'Trades',
+  tradeDetail: 'Trade',
+  proposeTrade: 'Propose trade',
+  blocks: 'Blocked traders',
   account: 'Account',
 };
 
@@ -41,12 +47,13 @@ function renderRoute(route: Route) {
     case 'watchlist':
       return <WatchlistScreen />;
     case 'trades':
-      return (
-        <PlaceholderScreen
-          title="Trades"
-          subtitle="Proposals, messaging, and dual-confirm land in the next P12 stage."
-        />
-      );
+      return <TradesScreen />;
+    case 'tradeDetail':
+      return <TradeDetailScreen id={route.id} />;
+    case 'proposeTrade':
+      return <ProposeTradeScreen {...route} />;
+    case 'blocks':
+      return <BlocksScreen />;
     case 'account':
       return <AccountScreen />;
   }

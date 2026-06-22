@@ -10,6 +10,10 @@ export type Route =
   | { name: 'listingForm'; id?: string }
   | { name: 'watchlist' }
   | { name: 'trades' }
+  | { name: 'tradeDetail'; id: string }
+  | { name: 'proposeTrade'; mode: 'new'; listingId: string }
+  | { name: 'proposeTrade'; mode: 'counter'; proposalId: string }
+  | { name: 'blocks' }
   | { name: 'account' };
 
 export type TabKey = 'home' | 'browse' | 'trades' | 'account';

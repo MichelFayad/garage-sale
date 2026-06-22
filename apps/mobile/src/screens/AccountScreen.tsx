@@ -1,16 +1,21 @@
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
+import { useNav } from '../navigation/NavContext';
+import { PrimaryButton, SecondaryButton } from '../components/ui';
 
-// Account tab — identity + sign out. Profile, card-on-file, and settings land P12.
+// Account tab — identity, blocked-traders management, and sign out. Card-on-file
+// lands in the billing stage of P12.
 export function AccountScreen() {
   const { user, logout } = useAuth();
+  const { push } = useNav();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Account</Text>
       <Text style={styles.label}>{user?.displayName}</Text>
       <Text style={styles.subtitle}>{user?.email}</Text>
       <View style={styles.spacer} />
-      <Button title="Log out" onPress={() => void logout()} />
+      <SecondaryButton title="Blocked traders" onPress={() => push({ name: 'blocks' })} />
+      <PrimaryButton title="Log out" tone="neutral" onPress={() => void logout()} />
     </View>
   );
 }

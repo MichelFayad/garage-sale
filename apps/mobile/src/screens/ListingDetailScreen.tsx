@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { trpc } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
+import { useNav } from '../navigation/NavContext';
 import {
   Badge,
   Loading,
@@ -17,6 +19,8 @@ type Listing = Awaited<ReturnType<typeof trpc.listings.byId.query>>;
 
 export function ListingDetailScreen({ id }: { id: string }) {
   const { width } = useWindowDimensions();
+  const { user } = useAuth();
+  const { push } = useNav();
   const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [watched, setWatched] = useState(false);
@@ -113,7 +117,12 @@ export function ListingDetailScreen({ id }: { id: string }) {
             busy={busy}
             onPress={() => void toggleWatch()}
           />
-          <SecondaryButton title="Propose trade (coming soon)" disabled onPress={() => {}} />
+          {listing.owner.id !== user?.id && listing.status === 'ACTIVE' && (
+            <SecondaryButton
+              title="Propose trade"
+              onPress={() => push({ name: 'proposeTrade', mode: 'new', listingId: id })}
+            />
+          )}
         </View>
       </View>
     </ScrollView>
