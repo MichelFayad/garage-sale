@@ -1,13 +1,16 @@
 import Link from 'next/link';
-import { serverApi } from '../../lib/server';
+import { getPublishedPages } from '../../lib/server';
 import { SkipLink } from '../../components/SkipLink';
 
 // Public marketing shell. SEO, CMS-driven content, and the single login entry
 // that routes staff → Admin Portal, traders → User Portal (P2/P10). The footer
 // lists published CMS pages (legal/marketing) pulled from the content router.
+// Static + ISR (no per-request headers) — revalidated hourly so published-page
+// edits propagate without a redeploy.
+export const revalidate = 3600;
+
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const api = await serverApi();
-  const pages = await api.content.published();
+  const pages = await getPublishedPages();
 
   return (
     <div className="min-h-screen flex flex-col">

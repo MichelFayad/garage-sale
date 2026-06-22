@@ -1,26 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { TRPCError } from '@trpc/server';
-import { serverApi } from '../../../lib/server';
+import { getPublishedPage } from '../../../lib/server';
 import { Markdown } from '../../../lib/markdown';
 
 // Public renderer for CMS pages (marketing + legal). Slug resolves to a PUBLISHED
 // ContentPage; drafts and unknown slugs 404. Body is authored Markdown.
-type Params = { params: Promise<{ slug: string }> };
+// Static + ISR — revalidated hourly so published edits show without a redeploy.
+export const revalidate = 3600;
 
-async function getPage(slug: string) {
-  try {
-    const api = await serverApi();
-    return await api.content.bySlug({ slug });
-  } catch (err) {
-    if (err instanceof TRPCError && err.code === 'NOT_FOUND') return null;
-    throw err;
-  }
-}
+type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getPage(slug);
+  const page = await getPublishedPage(slug);
   if (!page) return {};
   return {
     title: page.title,
@@ -31,7 +23,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ContentPageRoute({ params }: Params) {
   const { slug } = await params;
-  const page = await getPage(slug);
+  const page = await getPublishedPage(slug);
   if (!page) notFound();
   return (
     <article className="py-12">
