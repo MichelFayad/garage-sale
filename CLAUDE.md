@@ -84,8 +84,8 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 | P7    | Confirmation & trust (dual-confirm → COMPLETED, ratings, untrusted cron sweep)             | ✅ done |
 | P8    | Email notifications (Resend provider + all trade/trust triggers wired)                     | ✅ done |
 | P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ✅ done |
-| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ⬜ next |
-| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ⬜      |
+| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ✅ done |
+| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ⬜ next |
 | P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ⬜      |
 | P13   | Mobile release (EAS build/submit, store listings, TestFlight/Play, push)                   | ⬜      |
 
@@ -100,12 +100,17 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 - **Tests:** only `packages/core` pure functions are unit-tested. Router/integration/e2e tests are P11.
 - **Admin export:** CSV only (`/api/admin/export`). PDF export from the scope doc is deferred (CSV covers the reporting need; revisit in P10/P11 if a formatted report is required).
 - **Admin RBAC** ✅ done: tier checks are server-side (`requireTier`) **and** the admin UI now hides controls/nav/pages above the caller's tier via `core/roles meetsTier` + `AdminRoleProvider`/`useCan` (cosmetic; server still enforces).
+- **CMS (P10)** ✅ done: DB-backed `ContentPage` (DRAFT/PUBLISHED, slug-unique, Markdown body) + migration. Public `content` router (`bySlug`/`published`); `admin.content` CRUD (OPERATIONS) with audit. Web: server tRPC caller (`lib/server.ts`), safe Markdown renderer (`lib/markdown.tsx`, React nodes — no `dangerouslySetInnerHTML`), dynamic `/(marketing)/[slug]`, footer + sitemap list published pages, admin Content editor. Terms/Privacy/Cookies seeded PUBLISHED (legal templates — counsel review before prod).
+- **SEO (P10)** ✅ done: `lib/site.ts` constants; root metadata (metadataBase/OG/Twitter/robots/keywords/icons); dynamic `opengraph-image.tsx` (edge) feeds OG+Twitter; home JSON-LD (Organization+WebSite); canonicals; PWA manifest + favicon.
+- **Analytics (P10)** ✅ done: cookieless Plausible-compatible script loads only when `NEXT_PUBLIC_ANALYTICS_DOMAIN` set (no-op otherwise); `lib/analytics.ts` `track()` (no PII); Signup event on register.
+- **a11y (P10)** ✅ done: skip-links + focusable `<main id="main-content">` in all 3 shells, global `:focus-visible`, labelled nav landmarks, `role=alert/status` form messages. Full audit (contrast sweep, ARIA on all interactive widgets) still TBD in P11.
+- **Perf (P10)** ✅ done (baseline): self-hosted `next/font` Inter (display:swap, CSS var) removes external font fetch + CLS; viewport/themeColor. Deeper perf/scale (caching, ISR, the headers()-forced-dynamic marketing render) is P11.
 
 ---
 
 ## Environment
 
-Copy `.env.example` → `.env`. Groups: Database, Auth (JWT secrets + TTLs), OAuth (Google/Apple/Facebook), Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, publishable keys), Cron (`CRON_SECRET`), Email (provider + Resend key), App/Mobile URLs.
+Copy `.env.example` → `.env`. Groups: Database, Auth (JWT secrets + TTLs), OAuth (Google/Apple/Facebook), Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, publishable keys), Cron (`CRON_SECRET`), Email (provider + Resend key), App/Mobile URLs, Analytics (`NEXT_PUBLIC_ANALYTICS_DOMAIN`/`_SRC`, optional — cookieless, disabled when blank).
 
 ---
 
