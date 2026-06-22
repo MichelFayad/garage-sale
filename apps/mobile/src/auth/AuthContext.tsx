@@ -1,10 +1,20 @@
 // Auth state for the mobile app: hydrates a session from stored tokens on boot,
 // exposes credentials + OAuth sign-in, and persists/clears tokens via secure store.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { trpc } from '../api/client';
 import { clearTokens, getRefreshToken, saveTokens, type TokenPair } from './storage';
+import { registerForPushNotifications } from '../push/registerPush';
 
 export interface SessionUser {
   id: string;
@@ -32,6 +42,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthContextValue['status']>('loading');
   const [user, setUser] = useState<SessionUser | null>(null);
+  const pushTokenRef = useRef<string | null>(null);
 
   const applyTokens = useCallback(async (tokens: TokenPair) => {
     await saveTokens(tokens);
@@ -79,6 +90,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void hydrate();
   }, [hydrate]);
 
+  // Register this device for push once authenticated (best-effort; no-op on
+  // simulators / denied permission / unconfigured projectId).
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    let active = true;
+    void (async () => {
+      const token = await registerForPushNotifications();
+      if (!active || !token) return;
+      pushTokenRef.current = token;
+      try {
+        await trpc.push.register.mutate({ token, platform: Platform.OS });
+      } catch {
+        // ignore — push is non-critical
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [status]);
+
   const login = useCallback(
     async (email: string, password: string) => {
       const { tokens } = await trpc.auth.login.mutate({ email, password });
@@ -101,6 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    if (pushTokenRef.current) {
+      try {
+        await trpc.push.unregister.mutate({ token: pushTokenRef.current });
+      } catch {
+        // ignore — token will be pruned on next failed send
+      }
+      pushTokenRef.current = null;
+    }
     await clearTokens();
     setUser(null);
     setStatus('unauthenticated');
