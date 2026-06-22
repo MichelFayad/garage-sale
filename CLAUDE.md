@@ -72,22 +72,22 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 
 13 phases, P0–P13. Status as of this writing:
 
-| Phase | Scope                                                                                      | Status  |
-| ----- | ------------------------------------------------------------------------------------------ | ------- |
-| P0    | Monorepo scaffold (Turbo, pnpm, Next, Expo, packages, CI)                                  | ✅ done |
-| P1    | Data model (Prisma schema, seed, init migration)                                           | ✅ done |
-| P2    | Auth core (JWT, tRPC, email verify, password reset, OAuth, mobile auth)                    | ✅ done |
-| P3    | Product shells (web auth forms + portals, mobile tab shell, SEO)                           | ✅ done |
-| P4    | Stripe card-on-file + per-post charge (SetupIntent, webhook, publish charge)               | ✅ done |
-| P5    | Listings (Have/Want CRUD, photos, browse w/ filters + radius, watchlist)                   | ✅ done |
-| P6    | Trade proposals (single/bundle, accept/decline/counter, lock) + messaging + report         | ✅ done |
-| P7    | Confirmation & trust (dual-confirm → COMPLETED, ratings, untrusted cron sweep)             | ✅ done |
-| P8    | Email notifications (Resend provider + all trade/trust triggers wired)                     | ✅ done |
-| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ✅ done |
-| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ✅ done |
-| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ✅ done |
-| P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ✅ done |
-| P13   | Mobile release (EAS build/submit, store listings, TestFlight/Play, push)                   | ⬜ next |
+| Phase | Scope                                                                                       | Status  |
+| ----- | ------------------------------------------------------------------------------------------- | ------- |
+| P0    | Monorepo scaffold (Turbo, pnpm, Next, Expo, packages, CI)                                   | ✅ done |
+| P1    | Data model (Prisma schema, seed, init migration)                                            | ✅ done |
+| P2    | Auth core (JWT, tRPC, email verify, password reset, OAuth, mobile auth)                     | ✅ done |
+| P3    | Product shells (web auth forms + portals, mobile tab shell, SEO)                            | ✅ done |
+| P4    | Stripe card-on-file + per-post charge (SetupIntent, webhook, publish charge)                | ✅ done |
+| P5    | Listings (Have/Want CRUD, photos, browse w/ filters + radius, watchlist)                    | ✅ done |
+| P6    | Trade proposals (single/bundle, accept/decline/counter, lock) + messaging + report          | ✅ done |
+| P7    | Confirmation & trust (dual-confirm → COMPLETED, ratings, untrusted cron sweep)              | ✅ done |
+| P8    | Email notifications (Resend provider + all trade/trust triggers wired)                      | ✅ done |
+| P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)            | ✅ done |
+| P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                            | ✅ done |
+| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                  | ✅ done |
+| P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload)  | ✅ done |
+| P13   | Mobile release (EAS Android APK config, push notifications) — code done; cloud build is ops | ✅ done |
 
 > **API-first:** P4–P9 build features against `packages/api`; web + mobile both consume them. Admin (P9) lives under `appRouter.admin` (sub-routers users/listings/trades/fee/categories/reports/flags/settings/admins/audit), gated by `adminProcedure` + `requireTier` role tiers (SUPPORT < OPERATIONS < SUPER). Every admin mutation writes an `AuditLog` row via `audit()`. CSV export is a Node route handler (`/api/admin/export`), not tRPC.
 
@@ -95,6 +95,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 
 - **Block** ✅ done: `Block` model + migration; `blocks` router (list/status/block/unblock) + `assertNotBlocked` wired into `trades.propose/counter/sendMessage` (mutual). Web: thread block button + `/app/blocks` page. Mobile UI added P12 (trade-thread block/unblock + `blocks` screen). Listing visibility intentionally unaffected.
 - **Photo upload:** listings take photo **URLs** only on **both web and mobile** — there is no blob storage or upload endpoint, so **camera/library upload (the one P12 scope item not built) is backend-blocked**, not a mobile gap. Add a blob-storage upload procedure (and an upload widget on web + `expo-image-picker` on mobile) as its own follow-up before camera upload.
+- **Mobile release (P13)** ✅ code done, cloud build is ops: target is a **standalone Android APK** (no TestFlight/Play submission for now). `apps/mobile/eas.json` (development/preview/production profiles, all `buildType: apk`); `app.json` version 1.0.0 + `android.versionCode`, `expo-notifications` plugin, `extra.eas.projectId` slot (filled by `eas init`). **Push:** `PushToken` model + hand-migration `20260622160000_add_push_token`; `packages/api/src/push.ts` (Expo Push API send + DeviceNotRegistered prune, failures swallowed like email) + `push` router (register/unregister); `sendPush` wired into the trades `notify()` helper so pushes ride every trade/message email trigger. Mobile: `expo-notifications`/`expo-device`/`expo-constants`; `src/push/registerPush.ts` (permission + Android channel + Expo token via projectId), AuthContext registers on auth / unregisters on logout, App.tsx foreground handler. **Manual ops (you, not CI):** see `apps/mobile/RELEASE.md` — `eas login`/`eas init` (commit the projectId), set `EXPO_PUBLIC_API_URL` to the deployed API + Stripe key, `eas build -p android --profile preview` → APK; FCM service-account key via `eas credentials` for standalone Android push; app icon/splash art still Expo defaults. New-arch is on, so the Stripe + notifications native modules require an EAS build (`expo prebuild`), not Expo Go.
 - **Mobile User Portal (P12)** ✅ done: full RN/Expo portal consuming the shared routers. Custom dependency-free screen stack (`navigation/NavContext` + `routes.ts`, no react-navigation) over the tab shell; shared UI primitives (`components/ui.tsx`). Screens: Home dashboard, Browse (keyword + category/condition/type filters), listing detail (photo carousel + watchlist toggle + propose), My Listings (CRUD + mark-traded/remove + **Publish**), listing create/edit form (photo URLs), Watchlist, Trades list, trade thread (accept/decline/counter/cancel/confirm/star-rate + proposal-scoped messaging + report + block), propose/counter offer picker, Blocked traders, Payment method. **Stripe**: `@stripe/stripe-react-native` (Expo plugin + `StripeProvider`, key `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`); `billing/useCardSheet` collects a card via the native PaymentSheet over a SetupIntent; PublishScreen charges the non-refundable per-post fee. Location-radius browse filter omitted (needs device geolocation). Mobile lint config has **no react-hooks plugin** — exhaustive-deps is not enforced, and a **named** `eslint-disable react-hooks/*` would error (rule-not-found); use bare disables or none.
 - **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails now fire from `admin.users.setAccountStatus` (P9).
 - **Cron scheduler** ✅ done: Vercel Cron (`apps/web/vercel.json`, daily) hits `/api/cron/untrusted` via GET (auto-sends `CRON_SECRET` bearer); GH Action (`cron-untrusted.yml`) is a 30-min-later POST fallback. Route serves both GET + POST. Needs repo/Vercel secrets `CRON_SECRET` (+ `APP_URL` for the Action) at deploy.
