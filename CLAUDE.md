@@ -85,8 +85,8 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 | P8    | Email notifications (Resend provider + all trade/trust triggers wired)                     | ✅ done |
 | P9    | Admin features (user/listing/trade mgmt, fee config, categories, reports, audit)           | ✅ done |
 | P10   | Marketing polish (CMS, SEO, WCAG 2.1 AA, analytics, perf, legal)                           | ✅ done |
-| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ⬜ next |
-| P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ⬜      |
+| P11   | Hardening (tests, security review, rate limiting, webhook sig, perf/scale)                 | ✅ done |
+| P12   | Mobile app — full User Portal (card-on-file PaymentSheet, listings, trades, camera upload) | ⬜ next |
 | P13   | Mobile release (EAS build/submit, store listings, TestFlight/Play, push)                   | ⬜      |
 
 > **API-first:** P4–P9 build features against `packages/api`; web + mobile both consume them. Admin (P9) lives under `appRouter.admin` (sub-routers users/listings/trades/fee/categories/reports/flags/settings/admins/audit), gated by `adminProcedure` + `requireTier` role tiers (SUPPORT < OPERATIONS < SUPER). Every admin mutation writes an `AuditLog` row via `audit()`. CSV export is a Node route handler (`/api/admin/export`), not tRPC.
@@ -97,7 +97,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 - **Photo upload:** listings take photo **URLs** only; no blob storage / camera upload yet (P12).
 - **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails now fire from `admin.users.setAccountStatus` (P9).
 - **Cron scheduler** ✅ done: Vercel Cron (`apps/web/vercel.json`, daily) hits `/api/cron/untrusted` via GET (auto-sends `CRON_SECRET` bearer); GH Action (`cron-untrusted.yml`) is a 30-min-later POST fallback. Route serves both GET + POST. Needs repo/Vercel secrets `CRON_SECRET` (+ `APP_URL` for the Action) at deploy.
-- **Tests:** only `packages/core` pure functions are unit-tested. Router/integration/e2e tests are P11.
+- **Tests (P11)** ✅ baseline: `packages/core` pure fns + new `packages/api` router/service tests run on a **mocked Prisma** (no DB) — auth guard + rate-limit paths via the tRPC caller, `publishListing` money-path guards. Covers business rules, not SQL/Prisma queries or e2e; real integration-against-Postgres + e2e remain a deploy-time follow-up.
 - **Admin export:** CSV only (`/api/admin/export`). PDF export from the scope doc is deferred (CSV covers the reporting need; revisit in P10/P11 if a formatted report is required).
 - **Admin RBAC** ✅ done: tier checks are server-side (`requireTier`) **and** the admin UI now hides controls/nav/pages above the caller's tier via `core/roles meetsTier` + `AdminRoleProvider`/`useCan` (cosmetic; server still enforces).
 - **CMS (P10)** ✅ done: DB-backed `ContentPage` (DRAFT/PUBLISHED, slug-unique, Markdown body) + migration. Public `content` router (`bySlug`/`published`); `admin.content` CRUD (OPERATIONS) with audit. Web: server tRPC caller (`lib/server.ts`), safe Markdown renderer (`lib/markdown.tsx`, React nodes — no `dangerouslySetInnerHTML`), dynamic `/(marketing)/[slug]`, footer + sitemap list published pages, admin Content editor. Terms/Privacy/Cookies seeded PUBLISHED (legal templates — counsel review before prod).
@@ -105,6 +105,10 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 - **Analytics (P10)** ✅ done: cookieless Plausible-compatible script loads only when `NEXT_PUBLIC_ANALYTICS_DOMAIN` set (no-op otherwise); `lib/analytics.ts` `track()` (no PII); Signup event on register.
 - **a11y (P10)** ✅ done: skip-links + focusable `<main id="main-content">` in all 3 shells, global `:focus-visible`, labelled nav landmarks, `role=alert/status` form messages. Full audit (contrast sweep, ARIA on all interactive widgets) still TBD in P11.
 - **Perf (P10)** ✅ done (baseline): self-hosted `next/font` Inter (display:swap, CSS var) removes external font fetch + CLS; viewport/themeColor. Deeper perf/scale (caching, ISR, the headers()-forced-dynamic marketing render) is P11.
+- **Rate limiting (P11)** ✅ done: pluggable `RateLimiter` in `core/ratelimit.ts` (pure fixed-window decision, unit-tested) + in-memory default; presets `login`/`register`/`emailLink`. `api/ratelimit.ts` `enforceRateLimit(name, ip)` throws `TOO_MANY_REQUESTS`, wired into auth register/login/adminLogin/requestPasswordReset/resendVerification. Context resolves client IP from `X-Forwarded-For`/`X-Real-IP`. **In-memory store is per-process** — swap a Redis-backed `RateLimiter` at deploy for cross-instance limits.
+- **Security headers (P11)** ✅ done: `next.config.mjs headers()` sets CSP (allow-lists Stripe.js/frames/API + analytics origin; keeps `unsafe-inline` for unnonced App-Router inline/JSON-LD scripts — nonce tightening is a follow-up), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, HSTS. Cron auth uses constant-time compare (`node:crypto timingSafeEqual`). Stripe webhook handlers already idempotent per fee-charge/entity (status guards) — no event-dedup table.
+- **Perf/ISR (P11)** ✅ done: header-free `publicServerApi()` + `cache()`d `getPublishedPages`/`getPublishedPage` so the marketing layout, `[slug]` CMS pages, and sitemap render **static + ISR (`revalidate = 3600`)** instead of forced-dynamic. Follow-up: on-demand `revalidateTag` from `admin.content` mutations to drop the ≤1h propagation lag.
+- **a11y (P11)** ✅ baseline sweep: muted `text-gray-400` → `text-gray-500` (≥4.5:1, WCAG 1.4.3) across admin/trade/marketing surfaces; photo-remove icon button got an `aria-label` (glyph `aria-hidden`). Decorative listing thumbnails keep empty `alt`. A full contrast/ARIA audit of every widget is still not automated.
 
 ---
 
