@@ -2,7 +2,7 @@
   "expo": {
     "name": "Garage Sale",
     "slug": "garage-sale",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "garagesale",
     "userInterfaceStyle": "automatic",
@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.garagesale.app"
     },
     "android": {
-      "package": "com.garagesale.app"
+      "package": "com.garagesale.app",
+      "versionCode": 1
     },
     "plugins": [
       [
@@ -21,7 +22,18 @@
           "merchantIdentifier": "merchant.com.garagesale.app",
           "enableGooglePay": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2563eb"
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }
