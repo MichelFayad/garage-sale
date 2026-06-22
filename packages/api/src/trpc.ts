@@ -17,6 +17,8 @@ export interface Context {
   prisma: typeof prisma;
   /** Null when the request is unauthenticated. */
   principal: AuthPrincipal | null;
+  /** Client IP (proxy headers) for rate limiting; null when undeterminable. */
+  ip: string | null;
 }
 
 function parseCookie(header: string | null, name: string): string | null {
@@ -35,9 +37,20 @@ function accessTokenFromHeaders(headers: Headers): string | null {
   return parseCookie(headers.get('cookie'), SESSION_COOKIE);
 }
 
+/** First IP in an X-Forwarded-For chain, or the X-Real-IP fallback. */
+function clientIpFromHeaders(headers: Headers): string | null {
+  const fwd = headers.get('x-forwarded-for');
+  if (fwd) {
+    const first = fwd.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  return headers.get('x-real-ip')?.trim() || null;
+}
+
 /** Build a request context from incoming headers (web route / mobile fetch). */
 export async function createContext(opts?: { headers?: Headers }): Promise<Context> {
   let principal: AuthPrincipal | null = null;
+  const ip = opts?.headers ? clientIpFromHeaders(opts.headers) : null;
   const token = opts?.headers ? accessTokenFromHeaders(opts.headers) : null;
   if (token) {
     try {
@@ -51,7 +64,7 @@ export async function createContext(opts?: { headers?: Headers }): Promise<Conte
       // invalid/expired token → unauthenticated
     }
   }
-  return { prisma, principal };
+  return { prisma, principal, ip };
 }
 
 const t = initTRPC.context<Context>().create({ transformer: superjson });

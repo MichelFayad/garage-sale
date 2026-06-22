@@ -26,7 +26,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
   const email = String(body.email ?? '');
   const password = String(body.password ?? '');
-  const caller = appRouter.createCaller(await createContext());
+  const caller = appRouter.createCaller(await createContext({ headers: req.headers }));
 
   try {
     const { tokens } = await caller.auth.login({ email, password });

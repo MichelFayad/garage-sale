@@ -13,6 +13,7 @@ import {
   verifyToken,
 } from '@garage-sale/auth';
 import { protectedProcedure, publicProcedure, router } from '../trpc.js';
+import { enforceRateLimit } from '../ratelimit.js';
 import { appBaseUrl, sendEmail } from '../email.js';
 import { consumeVerificationToken, issueVerificationToken } from '../verification.js';
 import { publicUser } from '../user.js';
@@ -42,6 +43,7 @@ export const authRouter = router({
   register: publicProcedure
     .input(credentials.extend({ displayName: z.string().min(1).max(80) }))
     .mutation(async ({ ctx, input }) => {
+      enforceRateLimit('register', ctx.ip);
       const existing = await ctx.prisma.user.findUnique({ where: { email: input.email } });
       if (existing) {
         throw new TRPCError({ code: 'CONFLICT', message: 'Email already registered' });
@@ -62,6 +64,7 @@ export const authRouter = router({
   resendVerification: publicProcedure
     .input(z.object({ email: z.string().email().toLowerCase() }))
     .mutation(async ({ ctx, input }) => {
+      enforceRateLimit('emailLink', ctx.ip);
       const user = await ctx.prisma.user.findUnique({ where: { email: input.email } });
       if (user && !user.emailVerifiedAt && user.accountStatus !== 'BANNED') {
         await sendVerificationEmail(ctx.prisma, user);
@@ -92,6 +95,7 @@ export const authRouter = router({
   requestPasswordReset: publicProcedure
     .input(z.object({ email: z.string().email().toLowerCase() }))
     .mutation(async ({ ctx, input }) => {
+      enforceRateLimit('emailLink', ctx.ip);
       const user = await ctx.prisma.user.findUnique({ where: { email: input.email } });
       if (user && user.passwordHash && user.accountStatus !== 'BANNED') {
         const token = await issueVerificationToken(ctx.prisma, user.id, 'PASSWORD_RESET');
@@ -123,6 +127,7 @@ export const authRouter = router({
     }),
 
   login: publicProcedure.input(credentials).mutation(async ({ ctx, input }) => {
+    enforceRateLimit('login', ctx.ip);
     const user = await ctx.prisma.user.findUnique({ where: { email: input.email } });
     if (!user || !user.passwordHash || !(await verifyPassword(input.password, user.passwordHash))) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
@@ -142,6 +147,7 @@ export const authRouter = router({
   }),
 
   adminLogin: publicProcedure.input(credentials).mutation(async ({ ctx, input }) => {
+    enforceRateLimit('login', ctx.ip);
     const admin = await ctx.prisma.adminUser.findUnique({ where: { email: input.email } });
     if (!admin || !(await verifyPassword(input.password, admin.passwordHash))) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
