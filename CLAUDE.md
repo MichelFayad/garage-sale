@@ -93,13 +93,13 @@ CI (`.github/workflows/ci.yml`) runs typecheck + lint + test on **Node 22** (pnp
 
 ### Known deferred items / open loose ends
 
-- **Block** (block a trader from a thread): no `Block` model — needs a migration. Only `report` shipped.
+- **Block** ✅ done: `Block` model + migration; `blocks` router (list/status/block/unblock) + `assertNotBlocked` wired into `trades.propose/counter/sendMessage` (mutual). Web: thread block button + `/app/blocks` page. Mobile UI deferred to P12. Listing visibility intentionally unaffected.
 - **Photo upload:** listings take photo **URLs** only; no blob storage / camera upload yet (P12).
 - **Email:** Resend wired (P8); falls back to dev-logging without `RESEND_API_KEY`. `ACCOUNT_SUSPENDED`/`ACCOUNT_BANNED` emails now fire from `admin.users.setAccountStatus` (P9).
-- **Cron scheduler:** `/api/cron/untrusted` exists (Bearer `CRON_SECRET`) but nothing invokes it on a schedule yet — wire Vercel Cron / GH Action at deploy/P11.
+- **Cron scheduler** ✅ done: Vercel Cron (`apps/web/vercel.json`, daily) hits `/api/cron/untrusted` via GET (auto-sends `CRON_SECRET` bearer); GH Action (`cron-untrusted.yml`) is a 30-min-later POST fallback. Route serves both GET + POST. Needs repo/Vercel secrets `CRON_SECRET` (+ `APP_URL` for the Action) at deploy.
 - **Tests:** only `packages/core` pure functions are unit-tested. Router/integration/e2e tests are P11.
 - **Admin export:** CSV only (`/api/admin/export`). PDF export from the scope doc is deferred (CSV covers the reporting need; revisit in P10/P11 if a formatted report is required).
-- **Admin RBAC:** tier checks are server-side (`requireTier`); the admin UI shows all controls regardless of role and surfaces a FORBIDDEN error on use. Per-role UI hiding is cosmetic and deferred.
+- **Admin RBAC** ✅ done: tier checks are server-side (`requireTier`) **and** the admin UI now hides controls/nav/pages above the caller's tier via `core/roles meetsTier` + `AdminRoleProvider`/`useCan` (cosmetic; server still enforces).
 
 ---
 
