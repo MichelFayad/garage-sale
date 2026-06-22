@@ -9,6 +9,7 @@ import { z } from 'zod';
 import {
   AccountStatus,
   AdminRole,
+  ContentStatus,
   ListingStatus,
   ProposalStatus,
   ReportStatus,
@@ -518,6 +519,80 @@ const adminsRouter = router({
     }),
 });
 
+// ─── CMS content pages (P10) ────────────────────────────────
+
+const contentRouter = router({
+  // Staff (incl. SUPPORT) can view all pages — drafts and published.
+  list: adminProcedure.query(({ ctx }) =>
+    ctx.prisma.contentPage.findMany({
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, slug: true, title: true, status: true, updatedAt: true },
+    }),
+  ),
+
+  byId: adminProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const page = await ctx.prisma.contentPage.findUnique({ where: { id: input.id } });
+    if (!page) throw new TRPCError({ code: 'NOT_FOUND' });
+    return page;
+  }),
+
+  create: adminProcedure
+    .input(
+      z.object({
+        slug: z
+          .string()
+          .min(1)
+          .max(120)
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase, digits, and hyphens only'),
+        title: z.string().min(1).max(200),
+        description: z.string().max(300).optional(),
+        body: z.string().max(50_000),
+        status: z.nativeEnum(ContentStatus).default(ContentStatus.DRAFT),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireTier(ctx.principal.role, 'OPERATIONS');
+      const exists = await ctx.prisma.contentPage.findUnique({ where: { slug: input.slug } });
+      if (exists) throw new TRPCError({ code: 'CONFLICT', message: 'Slug already in use' });
+      const page = await ctx.prisma.contentPage.create({
+        data: { ...input, updatedByAdminId: ctx.principal.userId },
+      });
+      await audit(ctx.prisma, ctx.principal.userId, 'ContentPage', page.id, `create:${page.slug}`);
+      return page;
+    }),
+
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1).max(200).optional(),
+        description: z.string().max(300).optional(),
+        body: z.string().max(50_000).optional(),
+        status: z.nativeEnum(ContentStatus).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireTier(ctx.principal.role, 'OPERATIONS');
+      const { id, ...data } = input;
+      const page = await ctx.prisma.contentPage.update({
+        where: { id },
+        data: { ...data, updatedByAdminId: ctx.principal.userId },
+      });
+      await audit(ctx.prisma, ctx.principal.userId, 'ContentPage', id, `update:${page.status}`);
+      return page;
+    }),
+
+  delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    requireTier(ctx.principal.role, 'OPERATIONS');
+    const page = await ctx.prisma.contentPage.delete({
+      where: { id: input.id },
+      select: { id: true, slug: true },
+    });
+    await audit(ctx.prisma, ctx.principal.userId, 'ContentPage', page.id, `delete:${page.slug}`);
+    return page;
+  }),
+});
+
 // ─── Audit log viewer ───────────────────────────────────────
 
 const auditRouter = router({
@@ -552,5 +627,6 @@ export const adminRouter = router({
   flags: flagsRouter,
   settings: settingsRouter,
   admins: adminsRouter,
+  content: contentRouter,
   audit: auditRouter,
 });

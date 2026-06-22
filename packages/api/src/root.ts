@@ -8,6 +8,7 @@ import { browseRouter } from './routers/browse.js';
 import { watchlistRouter } from './routers/watchlist.js';
 import { tradesRouter } from './routers/trades.js';
 import { blocksRouter } from './routers/blocks.js';
+import { contentRouter } from './routers/content.js';
 import { adminRouter } from './routers/admin.js';
 
 // Root router — trade/messaging routers are added P6+; admin lands P9.
@@ -21,6 +22,7 @@ export const appRouter = router({
   watchlist: watchlistRouter,
   trades: tradesRouter,
   blocks: blocksRouter,
+  content: contentRouter,
   admin: adminRouter,
 });
 

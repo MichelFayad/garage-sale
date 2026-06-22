@@ -8,6 +8,7 @@ const SECTIONS: { href: string; label: string; desc: string; min?: AdminTier }[]
   { href: '/admin/reports', label: 'Reports', desc: 'Moderation queue' },
   { href: '/admin/flags', label: 'Flags', desc: 'Untrusted review' },
   { href: '/admin/categories', label: 'Categories', desc: 'Catalogue & keywords' },
+  { href: '/admin/content', label: 'Content', desc: 'Marketing & legal pages' },
   { href: '/admin/fee', label: 'Fee', desc: 'Per-post fee config' },
   { href: '/admin/settings', label: 'Settings', desc: 'Platform settings' },
   { href: '/admin/staff', label: 'Staff', desc: 'Admin accounts (SUPER)', min: 'SUPER' },

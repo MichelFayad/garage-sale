@@ -15,6 +15,7 @@ const NAV: { href: string; label: string; min?: AdminTier }[] = [
   { href: '/admin/reports', label: 'Reports' },
   { href: '/admin/flags', label: 'Flags' },
   { href: '/admin/categories', label: 'Categories' },
+  { href: '/admin/content', label: 'Content' },
   { href: '/admin/fee', label: 'Fee' },
   { href: '/admin/settings', label: 'Settings' },
   { href: '/admin/staff', label: 'Staff', min: 'SUPER' },

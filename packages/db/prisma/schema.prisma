@@ -91,6 +91,12 @@ enum ReportStatus {
   DISMISSED
 }
 
+/// Publish state for CMS pages (marketing + legal).
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
 /// Transactional email triggers (scope notification table).
 enum EmailType {
   EMAIL_VERIFICATION
@@ -198,6 +204,7 @@ model AdminUser {
   reportsHandled    Report[]
   auditLogs         AuditLog[]
   contentBlocks     ContentBlock[]
+  contentPages      ContentPage[]
   platformSettings  PlatformSetting[]
 }
 
@@ -474,6 +481,24 @@ model ContentBlock {
   updatedAt        DateTime   @updatedAt
 
   @@unique([slug, key])
+}
+
+/// Full CMS page (marketing prose + legal docs). Body is Markdown; rendered by a
+/// constrained renderer (headings/paragraphs/lists/links/bold). Only PUBLISHED
+/// pages are exposed publicly via the content router and listed in the sitemap.
+model ContentPage {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  description      String? // SEO meta description
+  body             String // Markdown
+  status           ContentStatus @default(DRAFT)
+  updatedByAdminId String?
+  updatedByAdmin   AdminUser?    @relation(fields: [updatedByAdminId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
 }
 
 /// Platform-wide settings, e.g. confirmationWindowDays, prohibited items.
