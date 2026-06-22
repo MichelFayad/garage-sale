@@ -1,22 +1,51 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
+import { useNav } from '../navigation/NavContext';
+import { Card, colors } from '../components/ui';
 
-// Home tab — authenticated landing/dashboard stub. Listings, trades, and
-// messaging summaries land with the full native User Portal in P12.
+// Home tab — authenticated dashboard with quick links into the User Portal.
 export function HomeScreen() {
   const { user } = useAuth();
+  const { push, switchTab } = useNav();
+
+  const links: { title: string; subtitle: string; onPress(): void }[] = [
+    {
+      title: 'Browse listings',
+      subtitle: 'Find items to trade for',
+      onPress: () => switchTab('browse'),
+    },
+    {
+      title: 'My listings',
+      subtitle: 'Create and manage your posts',
+      onPress: () => push({ name: 'myListings' }),
+    },
+    {
+      title: 'Watchlist',
+      subtitle: 'Listings you are following',
+      onPress: () => push({ name: 'watchlist' }),
+    },
+    { title: 'Trades', subtitle: 'Proposals and messages', onPress: () => switchTab('trades') },
+  ];
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Welcome, {user?.displayName}</Text>
-      <Text style={styles.subtitle}>
-        Your listings, trades, and messages will appear here. Features land P12.
-      </Text>
-    </View>
+      <View style={styles.grid}>
+        {links.map((l) => (
+          <Card key={l.title} onPress={l.onPress}>
+            <Text style={styles.cardTitle}>{l.title}</Text>
+            <Text style={styles.cardSubtitle}>{l.subtitle}</Text>
+          </Card>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 8 },
-  title: { fontSize: 22, fontWeight: '600' },
-  subtitle: { fontSize: 14, color: '#666' },
+  container: { padding: 16, gap: 16 },
+  title: { fontSize: 22, fontWeight: '600', color: colors.text },
+  grid: { gap: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+  cardSubtitle: { fontSize: 13, color: colors.muted },
 });

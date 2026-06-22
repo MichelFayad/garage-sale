@@ -5,6 +5,9 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { BrowseScreen } from '../screens/BrowseScreen';
 import { ListingDetailScreen } from '../screens/ListingDetailScreen';
+import { MyListingsScreen } from '../screens/MyListingsScreen';
+import { ListingFormScreen } from '../screens/ListingFormScreen';
+import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { colors } from '../components/ui';
 
@@ -16,6 +19,9 @@ const TITLES: Record<Route['name'], string> = {
   home: 'Garage Sale',
   browse: 'Browse',
   listingDetail: 'Listing',
+  myListings: 'My listings',
+  listingForm: 'Listing',
+  watchlist: 'Watchlist',
   trades: 'Trades',
   account: 'Account',
 };
@@ -28,6 +34,12 @@ function renderRoute(route: Route) {
       return <BrowseScreen />;
     case 'listingDetail':
       return <ListingDetailScreen id={route.id} />;
+    case 'myListings':
+      return <MyListingsScreen />;
+    case 'listingForm':
+      return <ListingFormScreen id={route.id} />;
+    case 'watchlist':
+      return <WatchlistScreen />;
     case 'trades':
       return (
         <PlaceholderScreen

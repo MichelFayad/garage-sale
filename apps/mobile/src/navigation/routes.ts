@@ -6,6 +6,9 @@ export type Route =
   | { name: 'home' }
   | { name: 'browse' }
   | { name: 'listingDetail'; id: string }
+  | { name: 'myListings' }
+  | { name: 'listingForm'; id?: string }
+  | { name: 'watchlist' }
   | { name: 'trades' }
   | { name: 'account' };
 
