@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: Hit untrusted sweep endpoint
         run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL/CRON_SECRET not configured yet — skipping until deploy sets repo secrets."
+            exit 0
+          fi
           curl -fsS -X POST "${APP_URL}/api/cron/untrusted" \
             -H "Authorization: Bearer ${CRON_SECRET}"
         env:
