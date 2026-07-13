@@ -39,6 +39,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       Navigator.of(context).pop();
     } on ApiException catch (e) {
       setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = 'Registration failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
