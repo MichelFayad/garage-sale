@@ -16,7 +16,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof TRPCError) {
-      return NextResponse.json({ error: err.message }, { status: err.code === 'UNAUTHORIZED' ? 401 : 400 });
+      return NextResponse.json(
+        { error: err.message },
+        { status: err.code === 'UNAUTHORIZED' ? 401 : 400 },
+      );
     }
     return NextResponse.json({ error: 'Refresh failed' }, { status: 400 });
   }
