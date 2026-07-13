@@ -21,7 +21,10 @@ class RestAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> login({required String email, required String password}) async {
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
     final json = await _client.post('/mobile/auth/login', {
       'email': email,
       'password': password,

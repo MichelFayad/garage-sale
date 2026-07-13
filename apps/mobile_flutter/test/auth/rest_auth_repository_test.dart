@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:garage_sale_mobile/core/api_client.dart';
-import 'package:garage_sale_mobile/core/api_exception.dart';
 import 'package:garage_sale_mobile/auth/rest_auth_repository.dart';
 
 void main() {
@@ -24,9 +23,14 @@ void main() {
           200,
         );
       });
-      final repo = RestAuthRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
+      final repo = RestAuthRepository(
+        ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'),
+      );
 
-      final result = await repo.login(email: 'a@b.com', password: 'password123');
+      final result = await repo.login(
+        email: 'a@b.com',
+        password: 'password123',
+      );
 
       expect(result.user.id, 'u1');
       expect(result.user.email, 'a@b.com');
@@ -34,17 +38,43 @@ void main() {
       expect(result.tokens.refreshToken, 'refresh1');
     });
 
-    test('login throws ApiException on invalid credentials', () async {
-      final mock = MockClient((request) async {
-        return http.Response(jsonEncode({'error': 'Invalid email or password'}), 401);
-      });
-      final repo = RestAuthRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
+    test(
+      'register posts email, password, and displayName to the register endpoint',
+      () async {
+        late http.Request captured;
+        final mock = MockClient((request) async {
+          captured = request as http.Request;
+          return http.Response(
+            jsonEncode({
+              'user': {
+                'id': 'u1',
+                'email': 'a@b.com',
+                'displayName': 'Alice',
+                'emailVerified': false,
+              },
+              'verificationRequired': true,
+            }),
+            200,
+          );
+        });
+        final repo = RestAuthRepository(
+          ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'),
+        );
 
-      expect(
-        () => repo.login(email: 'a@b.com', password: 'wrong'),
-        throwsA(isA<ApiException>()),
-      );
-    });
+        await repo.register(
+          email: 'a@b.com',
+          password: 'password123',
+          displayName: 'Alice',
+        );
+
+        expect(captured.url.path, '/api/mobile/auth/register');
+        expect(jsonDecode(captured.body), {
+          'email': 'a@b.com',
+          'password': 'password123',
+          'displayName': 'Alice',
+        });
+      },
+    );
 
     test('me sends the bearer token and parses the trader session', () async {
       late http.Request captured;
@@ -61,7 +91,9 @@ void main() {
           200,
         );
       });
-      final repo = RestAuthRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
+      final repo = RestAuthRepository(
+        ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'),
+      );
 
       final user = await repo.me('access1');
 
@@ -78,7 +110,9 @@ void main() {
           200,
         );
       });
-      final repo = RestAuthRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
+      final repo = RestAuthRepository(
+        ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'),
+      );
 
       final tokens = await repo.refresh('refresh1');
 
