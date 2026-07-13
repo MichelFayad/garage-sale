@@ -3,5 +3,6 @@ dist
 .next
 .turbo
 .expo
+apps/mobile_flutter
 pnpm-lock.yaml
 packages/db/prisma/migrations

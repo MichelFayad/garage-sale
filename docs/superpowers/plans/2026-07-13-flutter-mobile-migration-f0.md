@@ -17,6 +17,7 @@
 ## Task 0: Flutter project scaffold
 
 **Files:**
+
 - Create: `apps/mobile_flutter/` (via `flutter create`)
 - Modify: `apps/mobile_flutter/pubspec.yaml`
 
@@ -28,9 +29,11 @@ Expected: prints a Flutter/Dart version (e.g. `Flutter 3.24.x • Dart 3.5.x`). 
 - [ ] **Step 2: Scaffold the project**
 
 Run (from repo root):
+
 ```bash
 flutter create --org com.garagesale --project-name garage_sale_mobile apps/mobile_flutter
 ```
+
 Expected: creates `apps/mobile_flutter/` with a default counter-app template, prints "All done!".
 
 - [ ] **Step 3: Sanity-check the default template**
@@ -76,6 +79,7 @@ git commit -m "F0: scaffold Flutter project with core dependencies"
 ## Task 1: Secure token storage
 
 **Files:**
+
 - Create: `apps/mobile_flutter/lib/core/key_value_store.dart`
 - Create: `apps/mobile_flutter/lib/core/secure_key_value_store.dart`
 - Create: `apps/mobile_flutter/lib/auth/token_storage.dart`
@@ -87,6 +91,7 @@ This mirrors `apps/mobile/src/auth/storage.ts` (two `expo-secure-store` keys, `g
 - [ ] **Step 1: Write the interface (no test needed — pure type)**
 
 `apps/mobile_flutter/lib/core/key_value_store.dart`:
+
 ```dart
 abstract class KeyValueStore {
   Future<void> write(String key, String value);
@@ -98,6 +103,7 @@ abstract class KeyValueStore {
 - [ ] **Step 2: Write the in-memory test double**
 
 `apps/mobile_flutter/test/support/in_memory_key_value_store.dart`:
+
 ```dart
 import 'package:garage_sale_mobile/core/key_value_store.dart';
 
@@ -118,6 +124,7 @@ class InMemoryKeyValueStore implements KeyValueStore {
 - [ ] **Step 3: Write the failing test for TokenStorage**
 
 `apps/mobile_flutter/test/auth/token_storage_test.dart`:
+
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:garage_sale_mobile/auth/token_storage.dart';
@@ -165,6 +172,7 @@ Expected: FAIL — `Target of URI doesn't exist: 'package:garage_sale_mobile/aut
 - [ ] **Step 5: Add flutter_secure_storage-backed implementation**
 
 `apps/mobile_flutter/lib/core/secure_key_value_store.dart`:
+
 ```dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'key_value_store.dart';
@@ -188,6 +196,7 @@ class SecureKeyValueStore implements KeyValueStore {
 - [ ] **Step 6: Implement TokenStorage**
 
 `apps/mobile_flutter/lib/auth/token_storage.dart`:
+
 ```dart
 import '../core/key_value_store.dart';
 import '../core/secure_key_value_store.dart';
@@ -240,6 +249,7 @@ git commit -m "F0: add secure token storage"
 ## Task 2: API client
 
 **Files:**
+
 - Create: `apps/mobile_flutter/lib/core/env.dart`
 - Create: `apps/mobile_flutter/lib/core/api_exception.dart`
 - Create: `apps/mobile_flutter/lib/core/api_client.dart`
@@ -250,6 +260,7 @@ Mirrors `apps/mobile/src/api/client.ts`'s bearer-header-per-request pattern (bas
 - [ ] **Step 1: Write env + exception types (no test needed — pure types)**
 
 `apps/mobile_flutter/lib/core/env.dart`:
+
 ```dart
 class Env {
   /// Override at build/run time: --dart-define=API_BASE_URL=http://10.0.2.2:3000/api
@@ -262,6 +273,7 @@ class Env {
 ```
 
 `apps/mobile_flutter/lib/core/api_exception.dart`:
+
 ```dart
 class ApiException implements Exception {
   const ApiException(this.statusCode, this.message);
@@ -277,6 +289,7 @@ class ApiException implements Exception {
 - [ ] **Step 2: Write the failing test for ApiClient**
 
 `apps/mobile_flutter/test/core/api_client_test.dart`:
+
 ```dart
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
@@ -347,6 +360,7 @@ Expected: FAIL — `Target of URI doesn't exist: 'package:garage_sale_mobile/cor
 - [ ] **Step 4: Implement ApiClient**
 
 `apps/mobile_flutter/lib/core/api_client.dart`:
+
 ```dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -418,6 +432,7 @@ git commit -m "F0: add REST API client"
 ## Task 3: Backend REST facade for auth
 
 **Files:**
+
 - Create: `apps/web/src/app/api/mobile/auth/register/route.ts`
 - Create: `apps/web/src/app/api/mobile/auth/login/route.ts`
 - Create: `apps/web/src/app/api/mobile/auth/refresh/route.ts`
@@ -428,6 +443,7 @@ Each route is a thin wrap of `appRouter.createCaller(ctx)`, the exact pattern `a
 - [ ] **Step 1: Register endpoint**
 
 `apps/web/src/app/api/mobile/auth/register/route.ts`:
+
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { TRPCError } from '@trpc/server';
@@ -463,6 +479,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 - [ ] **Step 2: Login endpoint**
 
 `apps/web/src/app/api/mobile/auth/login/route.ts`:
+
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { TRPCError } from '@trpc/server';
@@ -499,6 +516,7 @@ Note: unlike the web login route, this does **not** fall back to `auth.adminLogi
 - [ ] **Step 3: Refresh endpoint**
 
 `apps/web/src/app/api/mobile/auth/refresh/route.ts`:
+
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { TRPCError } from '@trpc/server';
@@ -518,7 +536,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof TRPCError) {
-      return NextResponse.json({ error: err.message }, { status: err.code === 'UNAUTHORIZED' ? 401 : 400 });
+      return NextResponse.json(
+        { error: err.message },
+        { status: err.code === 'UNAUTHORIZED' ? 401 : 400 },
+      );
     }
     return NextResponse.json({ error: 'Refresh failed' }, { status: 400 });
   }
@@ -528,6 +549,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 - [ ] **Step 4: Me endpoint**
 
 `apps/web/src/app/api/mobile/auth/me/route.ts`:
+
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
 import { TRPCError } from '@trpc/server';
@@ -544,7 +566,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(me);
   } catch (err) {
     if (err instanceof TRPCError) {
-      return NextResponse.json({ error: err.message }, { status: err.code === 'UNAUTHORIZED' ? 401 : 400 });
+      return NextResponse.json(
+        { error: err.message },
+        { status: err.code === 'UNAUTHORIZED' ? 401 : 400 },
+      );
     }
     return NextResponse.json({ error: 'Failed to load session' }, { status: 400 });
   }
@@ -571,6 +596,7 @@ git commit -m "F0: add mobile REST facade for auth (register/login/refresh/me)"
 ## Task 4: Auth repository
 
 **Files:**
+
 - Create: `apps/mobile_flutter/lib/auth/session_user.dart`
 - Create: `apps/mobile_flutter/lib/auth/auth_repository.dart`
 - Create: `apps/mobile_flutter/lib/auth/rest_auth_repository.dart`
@@ -581,6 +607,7 @@ git commit -m "F0: add mobile REST facade for auth (register/login/refresh/me)"
 - [ ] **Step 1: Write SessionUser and the AuthRepository interface (no test needed — pure types)**
 
 `apps/mobile_flutter/lib/auth/session_user.dart`:
+
 ```dart
 class SessionUser {
   const SessionUser({
@@ -607,6 +634,7 @@ class SessionUser {
 ```
 
 `apps/mobile_flutter/lib/auth/auth_repository.dart`:
+
 ```dart
 import 'session_user.dart';
 import 'token_storage.dart';
@@ -635,6 +663,7 @@ abstract class AuthRepository {
 - [ ] **Step 2: Write the failing test for RestAuthRepository**
 
 `apps/mobile_flutter/test/auth/rest_auth_repository_test.dart`:
+
 ```dart
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
@@ -735,6 +764,7 @@ Expected: FAIL — `Target of URI doesn't exist: 'package:garage_sale_mobile/aut
 - [ ] **Step 4: Implement RestAuthRepository**
 
 `apps/mobile_flutter/lib/auth/rest_auth_repository.dart`:
+
 ```dart
 import '../core/api_client.dart';
 import 'auth_repository.dart';
@@ -811,6 +841,7 @@ git commit -m "F0: add auth repository over the REST facade"
 ## Task 5: Auth controller (Riverpod)
 
 **Files:**
+
 - Create: `apps/mobile_flutter/lib/auth/providers.dart`
 - Create: `apps/mobile_flutter/lib/auth/auth_controller.dart`
 - Create: `apps/mobile_flutter/test/support/fake_auth_repository.dart`
@@ -821,6 +852,7 @@ Mirrors `apps/mobile/src/auth/AuthContext.tsx`'s `hydrate()`: on boot, try `me()
 - [ ] **Step 1: Write the shared fake repository test double**
 
 `apps/mobile_flutter/test/support/fake_auth_repository.dart`:
+
 ```dart
 import 'package:garage_sale_mobile/auth/auth_repository.dart';
 import 'package:garage_sale_mobile/auth/session_user.dart';
@@ -877,6 +909,7 @@ class FakeAuthRepository implements AuthRepository {
 - [ ] **Step 2: Write the failing test for AuthController**
 
 `apps/mobile_flutter/test/auth/auth_controller_test.dart`:
+
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -990,6 +1023,7 @@ Expected: FAIL — `Target of URI doesn't exist: 'package:garage_sale_mobile/aut
 - [ ] **Step 4: Implement providers and AuthController**
 
 `apps/mobile_flutter/lib/auth/providers.dart`:
+
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
@@ -1007,6 +1041,7 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 ```
 
 `apps/mobile_flutter/lib/auth/auth_controller.dart`:
+
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_repository.dart';
@@ -1089,6 +1124,7 @@ git commit -m "F0: add Riverpod AuthController with boot-time hydrate/refresh"
 ## Task 6: Screens and router
 
 **Files:**
+
 - Create: `apps/mobile_flutter/lib/screens/login_screen.dart`
 - Create: `apps/mobile_flutter/lib/screens/register_screen.dart`
 - Create: `apps/mobile_flutter/lib/screens/home_screen.dart`
@@ -1099,6 +1135,7 @@ git commit -m "F0: add Riverpod AuthController with boot-time hydrate/refresh"
 - [ ] **Step 1: Write the failing test for LoginScreen**
 
 `apps/mobile_flutter/test/widget/login_screen_test.dart`:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1161,6 +1198,7 @@ Expected: FAIL — `Target of URI doesn't exist: 'package:garage_sale_mobile/scr
 - [ ] **Step 3: Implement LoginScreen**
 
 `apps/mobile_flutter/lib/screens/login_screen.dart`:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1243,6 +1281,7 @@ Expected: `00:0X +2: All tests passed!`
 - [ ] **Step 5: Implement RegisterScreen (no dedicated test — see Step 8 for the covered flow)**
 
 `apps/mobile_flutter/lib/screens/register_screen.dart`:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1338,6 +1377,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 - [ ] **Step 6: Implement HomeScreen (no dedicated test — see Step 8 for the covered flow)**
 
 `apps/mobile_flutter/lib/screens/home_screen.dart`:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1373,6 +1413,7 @@ class HomeScreen extends ConsumerWidget {
 - [ ] **Step 7: Implement the router**
 
 `apps/mobile_flutter/lib/router/app_router.dart`:
+
 ```dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1414,6 +1455,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 - [ ] **Step 8: Write and run the end-to-end app flow test**
 
 `apps/mobile_flutter/test/widget/app_flow_test.dart`:
+
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1468,12 +1510,14 @@ git commit -m "F0: add login/register/home screens and go_router wiring"
 ## Task 7: App entry point and final wiring
 
 **Files:**
+
 - Modify: `apps/mobile_flutter/lib/main.dart` (replace default counter app)
 - Delete: `apps/mobile_flutter/test/widget_test.dart` (default counter test, no longer applicable)
 
 - [ ] **Step 1: Replace main.dart**
 
 `apps/mobile_flutter/lib/main.dart`:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1526,6 +1570,7 @@ cd apps/mobile_flutter
 flutter run -d <device-id> --dart-define=API_BASE_URL=http://10.0.2.2:3000/api   # Android emulator
 # or --dart-define=API_BASE_URL=http://localhost:3000/api                          # iOS simulator
 ```
+
 Expected: app opens to the login screen; registering an account triggers the existing verification-email flow (check the dev-log fallback in the web server's console if `RESEND_API_KEY` isn't set); after verifying and logging in, the app shows the home screen with "Signed in as \<email\>"; killing and relaunching the app keeps you logged in (boot-time hydrate); logout returns to the login screen.
 
 - [ ] **Step 6: Commit**

@@ -10,13 +10,14 @@
 
 **Design doc:** `docs/superpowers/specs/2026-07-06-camera-library-photo-upload-design.md`
 
-**Correction vs. the design doc:** the design doc suggested cleanup could be needed on listing *removal* too. `listings.remove` (`packages/api/src/routers/listings.ts:145-160`) is a **soft** delete — it flips `status` to `REMOVED` and keeps the `ListingPhoto` rows (the owner can still see them). Only `listings.update`'s wholesale photo-replace actually discards `ListingPhoto` rows, so that's the only place Blob cleanup is wired in. No further removal-path hook is needed.
+**Correction vs. the design doc:** the design doc suggested cleanup could be needed on listing _removal_ too. `listings.remove` (`packages/api/src/routers/listings.ts:145-160`) is a **soft** delete — it flips `status` to `REMOVED` and keeps the `ListingPhoto` rows (the owner can still see them). Only `listings.update`'s wholesale photo-replace actually discards `ListingPhoto` rows, so that's the only place Blob cleanup is wired in. No further removal-path hook is needed.
 
 ---
 
 ### Task 1: Core — photo upload constants, pure helpers, rate-limit preset
 
 **Files:**
+
 - Modify: `packages/core/src/constants.ts`
 - Create: `packages/core/src/upload.ts`
 - Create: `packages/core/src/upload.test.ts`
@@ -184,6 +185,7 @@ git commit -m "feat(core): add photo-upload constants, pure helpers, rate-limit 
 ### Task 2: API — Vercel Blob service module
 
 **Files:**
+
 - Modify: `packages/api/package.json`
 - Create: `packages/api/src/upload.ts`
 
@@ -221,10 +223,7 @@ export interface UploadToken {
 }
 
 /** Mint a client token scoped to a fresh path under the caller's own prefix. */
-export async function createUploadToken(
-  userId: string,
-  contentType: string,
-): Promise<UploadToken> {
+export async function createUploadToken(userId: string, contentType: string): Promise<UploadToken> {
   if (!isAllowedPhotoContentType(contentType)) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Unsupported image type' });
   }
@@ -266,6 +265,7 @@ git commit -m "feat(api): add Vercel Blob upload service (token mint + best-effo
 ### Task 3: API — uploads router
 
 **Files:**
+
 - Modify: `packages/api/src/ratelimit.ts`
 - Create: `packages/api/src/routers/uploads.ts`
 - Modify: `packages/api/src/root.ts`
@@ -386,6 +386,7 @@ git commit -m "feat(api): add uploads router (token mint + delete), mount on app
 ### Task 4: API — uploads router tests
 
 **Files:**
+
 - Create: `packages/api/src/routers/uploads.test.ts`
 
 - [ ] **Step 1: Write the failing tests**
@@ -503,6 +504,7 @@ git commit -m "test(api): cover uploads router auth guard, validation, ownership
 ### Task 5: API — wire Blob cleanup into `listings.update`
 
 **Files:**
+
 - Modify: `packages/api/src/routers/listings.ts:104-124`
 - Create: `packages/api/src/routers/listings.test.ts`
 
@@ -649,6 +651,7 @@ git commit -m "feat(api): best-effort delete removed photos from Blob on listing
 ### Task 6: Env var + full backend gate check
 
 **Files:**
+
 - Modify: `.env.example`
 
 - [ ] **Step 1: Document the new env var**
@@ -679,6 +682,7 @@ git commit -m "docs: document BLOB_READ_WRITE_TOKEN for photo uploads"
 ### Task 7: Web — PhotoUploader component
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Create: `apps/web/src/app/(user)/app/listings/PhotoUploader.tsx`
 - Modify: `apps/web/src/app/(user)/app/listings/ListingForm.tsx`
@@ -840,15 +844,15 @@ import { PhotoUploader } from './PhotoUploader';
 Remove the now-unused `setPhoto` function (lines 58-60):
 
 ```tsx
-  function setPhoto(i: number, url: string) {
-    setValues((v) => ({ ...v, photos: v.photos.map((p, idx) => (idx === i ? url : p)) }));
-  }
+function setPhoto(i: number, url: string) {
+  setValues((v) => ({ ...v, photos: v.photos.map((p, idx) => (idx === i ? url : p)) }));
+}
 ```
 
 Replace the `<fieldset>` block (lines 182-216) with:
 
 ```tsx
-      <PhotoUploader photos={values.photos} onChange={(photos) => set('photos', photos)} />
+<PhotoUploader photos={values.photos} onChange={(photos) => set('photos', photos)} />
 ```
 
 - [ ] **Step 5: Typecheck + lint**
@@ -863,6 +867,7 @@ Start the dev server and exercise the golden path + edge cases:
 Run: `pnpm --filter @garage-sale/web dev`
 
 In the browser, log in as a trader, go to My Listings → create a listing:
+
 - Add 2-3 photos via the file picker — confirm thumbnails render and the network tab shows a direct `PUT` to a `vercel-storage.com`/Blob host, not to `/api/trpc`.
 - Remove one photo — confirm the thumbnail disappears and a `uploads.deleteFile` call fires.
 - Add photos up to `MAX_LISTING_PHOTOS` (10) — confirm the "+ Add photo" control disappears at the limit.
@@ -883,6 +888,7 @@ git commit -m "feat(web): replace listing photo URL inputs with direct-to-Blob u
 ### Task 8: Mobile — dependencies + permissions
 
 **Files:**
+
 - Modify: `apps/mobile/package.json`
 - Modify: `apps/mobile/app.json`
 
@@ -902,13 +908,13 @@ Expected: `@vercel/blob` appears under `dependencies` in `apps/mobile/package.js
 In `apps/mobile/app.json`, add an entry to the `plugins` array (alongside the existing `@stripe/stripe-react-native` and `expo-notifications` entries):
 
 ```json
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Garage Sale needs access to your photos so you can add pictures to your listings.",
-          "cameraPermission": "Garage Sale needs access to your camera so you can take photos for your listings."
-        }
-      ]
+[
+  "expo-image-picker",
+  {
+    "photosPermission": "Garage Sale needs access to your photos so you can add pictures to your listings.",
+    "cameraPermission": "Garage Sale needs access to your camera so you can take photos for your listings."
+  }
+]
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -928,6 +934,7 @@ git commit -m "chore(mobile): add expo-image-picker/expo-image-manipulator/@verc
 ### Task 9: Mobile — usePhotoUpload hook
 
 **Files:**
+
 - Create: `apps/mobile/src/photos/usePhotoUpload.ts`
 
 - [ ] **Step 1: Write the hook**
@@ -998,6 +1005,7 @@ export function usePhotoUpload() {
 
 Run: `pnpm --filter @garage-sale/mobile typecheck`
 Expected: PASS. Two known risk spots to check against the installed type defs if this fails:
+
 - `ImagePicker.ImagePickerOptions` may require an explicit `mediaTypes` field in the installed version — if so, check `node_modules/expo-image-picker/build/ImagePicker.types.d.ts` for the current accepted value (older API: `MediaTypeOptions.Images`; newer API: `['images']`) and set it explicitly.
 - `@vercel/blob/client`'s `upload()` option names — same check as the web task, `node_modules/@vercel/blob/dist/client.d.mts`.
 
@@ -1013,6 +1021,7 @@ git commit -m "feat(mobile): add usePhotoUpload hook (pick, compress, direct-to-
 ### Task 10: Mobile — wire into ListingFormScreen
 
 **Files:**
+
 - Modify: `apps/mobile/src/screens/ListingFormScreen.tsx`
 
 - [ ] **Step 1: Update imports**
@@ -1056,36 +1065,36 @@ with:
 Inside `ListingFormScreen`, right after `const { pop } = useNav();`, add:
 
 ```tsx
-  const pickAndUpload = usePhotoUpload();
-  const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
-  const [photoUploading, setPhotoUploading] = useState(false);
+const pickAndUpload = usePhotoUpload();
+const [photoPickerOpen, setPhotoPickerOpen] = useState(false);
+const [photoUploading, setPhotoUploading] = useState(false);
 ```
 
 Right after the `set` function, add:
 
 ```tsx
-  async function addPhoto(source: 'camera' | 'library') {
-    setPhotoPickerOpen(false);
-    setPhotoUploading(true);
-    setError(null);
-    const result = await pickAndUpload(source);
-    setPhotoUploading(false);
-    if (!result.ok) {
-      if (result.error !== 'cancelled') setError(result.error);
-      return;
-    }
-    set('photos', [...values.photos, result.url]);
+async function addPhoto(source: 'camera' | 'library') {
+  setPhotoPickerOpen(false);
+  setPhotoUploading(true);
+  setError(null);
+  const result = await pickAndUpload(source);
+  setPhotoUploading(false);
+  if (!result.ok) {
+    if (result.error !== 'cancelled') setError(result.error);
+    return;
   }
+  set('photos', [...values.photos, result.url]);
+}
 
-  function removePhoto(url: string) {
-    set(
-      'photos',
-      values.photos.filter((p) => p !== url),
-    );
-    trpc.uploads.deleteFile.mutate({ url }).catch(() => {
-      // Best-effort cleanup; the photo is already gone from the form either way.
-    });
-  }
+function removePhoto(url: string) {
+  set(
+    'photos',
+    values.photos.filter((p) => p !== url),
+  );
+  trpc.uploads.deleteFile.mutate({ url }).catch(() => {
+    // Best-effort cleanup; the photo is already gone from the form either way.
+  });
+}
 ```
 
 - [ ] **Step 4: Replace the photo UI block**
@@ -1093,41 +1102,38 @@ Right after the `set` function, add:
 Replace the `<View style={styles.photos}>...</View>` block (lines 164-203 in the original file) with:
 
 ```tsx
-      <View style={styles.photos}>
-        <Text style={styles.photosLabel}>Photos (max 10)</Text>
-        <View style={styles.photoGrid}>
-          {values.photos.map((url) => (
-            <View key={url} style={styles.thumbWrap}>
-              <Image source={{ uri: url }} style={styles.thumb} />
-              <Pressable
-                accessibilityLabel="Remove photo"
-                onPress={() => removePhoto(url)}
-                style={styles.thumbRemove}
-              >
-                <Text aria-hidden style={styles.photoRemoveText}>
-                  ✕
-                </Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
-        {values.photos.length < 10 &&
-          (photoPickerOpen ? (
-            <View style={styles.photoPickerRow}>
-              <SecondaryButton title="Take Photo" onPress={() => void addPhoto('camera')} />
-              <SecondaryButton
-                title="Choose from Library"
-                onPress={() => void addPhoto('library')}
-              />
-            </View>
-          ) : (
-            <SecondaryButton
-              title={photoUploading ? 'Uploading…' : '+ Add photo'}
-              disabled={photoUploading}
-              onPress={() => setPhotoPickerOpen(true)}
-            />
-          ))}
+<View style={styles.photos}>
+  <Text style={styles.photosLabel}>Photos (max 10)</Text>
+  <View style={styles.photoGrid}>
+    {values.photos.map((url) => (
+      <View key={url} style={styles.thumbWrap}>
+        <Image source={{ uri: url }} style={styles.thumb} />
+        <Pressable
+          accessibilityLabel="Remove photo"
+          onPress={() => removePhoto(url)}
+          style={styles.thumbRemove}
+        >
+          <Text aria-hidden style={styles.photoRemoveText}>
+            ✕
+          </Text>
+        </Pressable>
       </View>
+    ))}
+  </View>
+  {values.photos.length < 10 &&
+    (photoPickerOpen ? (
+      <View style={styles.photoPickerRow}>
+        <SecondaryButton title="Take Photo" onPress={() => void addPhoto('camera')} />
+        <SecondaryButton title="Choose from Library" onPress={() => void addPhoto('library')} />
+      </View>
+    ) : (
+      <SecondaryButton
+        title={photoUploading ? 'Uploading…' : '+ Add photo'}
+        disabled={photoUploading}
+        onPress={() => setPhotoPickerOpen(true)}
+      />
+    ))}
+</View>
 ```
 
 - [ ] **Step 5: Update styles**
@@ -1172,6 +1178,7 @@ Expected: PASS
 This app has `newArchEnabled: true` and now adds two more native modules (`expo-image-picker`, `expo-image-manipulator`), on top of the existing Stripe + notifications modules — per this project's established pattern, that means **Expo Go cannot run it**; verification requires an EAS build.
 
 Run: `cd apps/mobile && eas build -p android --profile development` (or `preview`), install the resulting build on a device/emulator, then:
+
 - Open the listing create form → tap "+ Add photo" → confirm "Take Photo" / "Choose from Library" both appear.
 - Take/choose a photo — confirm it compresses+uploads and a thumbnail appears.
 - Remove a photo — confirm it disappears from the grid.
@@ -1191,6 +1198,7 @@ git commit -m "feat(mobile): replace listing photo URL inputs with camera/librar
 ### Task 11: Docs + final gate
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 
 - [ ] **Step 1: Update the "Photo upload" deferred-item bullet**
