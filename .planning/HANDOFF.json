@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-21T12:20:15.383Z",
+  "timestamp": "2026-07-06T13:36:06.989Z",
   "source": "auto-postool",
   "partial": false,
   "phase": null,
@@ -18,57 +18,17 @@
   "uncommitted_files": [
     {
       "status": "M",
+      "path": ".claude/settings.local.json"
+    },
+    {
+      "status": "M",
       "path": ".planning/HANDOFF.json"
     },
     {
       "status": "M",
-      "path": "apps/web/src/app/api/trpc/[trpc]/route.ts"
-    },
-    {
-      "status": "M",
-      "path": "apps/web/src/middleware.ts"
-    },
-    {
-      "status": "M",
-      "path": "packages/api/package.json"
-    },
-    {
-      "status": "M",
-      "path": "packages/api/src/root.ts"
-    },
-    {
-      "status": "M",
-      "path": "packages/api/src/trpc.ts"
-    },
-    {
-      "status": "M",
-      "path": "packages/auth/package.json"
-    },
-    {
-      "status": "M",
-      "path": "packages/auth/src/index.ts"
-    },
-    {
-      "status": "M",
-      "path": "packages/auth/src/jwt.ts"
-    },
-    {
-      "status": "M",
-      "path": "pnpm-lock.yaml"
-    },
-    {
-      "status": "??",
-      "path": "packages/api/src/routers/auth.ts"
-    },
-    {
-      "status": "??",
-      "path": "packages/auth/src/password.ts"
-    },
-    {
-      "status": "??",
-      "path": "packages/auth/src/tokens.ts"
+      "path": "apps/mobile/app.json"
     }
   ],
   "next_action": null,
-  "context_notes": "Recent commits:\ne00606b P1: full Prisma data model\nac4d259 P0: monorepo scaffold + tooling\n6af9a46 Initial commit: project scope and build plan"
+  "context_notes": "Recent commits:\n27528d8 docs: add implementation plan for camera/library photo upload\n5952a70 docs: add design spec for camera/library photo upload\nea860ac fix: skip cron sweep gracefully when APP_URL/CRON_SECRET unset\n8a79bef P13(4): Android APK release runbook + mark P13 done in CLAUDE.md\n1b1a323 P13(3): mobile push — register on login, unregister on logout, foreground handler"
 }

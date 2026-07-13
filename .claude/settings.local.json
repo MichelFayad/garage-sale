@@ -19,7 +19,20 @@
       "Bash(pnpm lint *)",
       "Bash(pnpm test *)",
       "Bash(pnpm format:check)",
-      "Bash(pnpm format *)"
+      "Bash(pnpm format *)",
+      "Bash(git push:*)",
+      "Bash(pnpm -r --filter @garage-sale/auth --filter @garage-sale/api --filter @garage-sale/db exec tsc --noEmit)",
+      "Bash(pnpm turbo *)",
+      "Bash(pnpm prettier *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(ls vercel.json)",
+      "Bash(ls .github/workflows/)",
+      "Bash(find apps/web/src/app/api/cron -type f)",
+      "Bash(npm install *)",
+      "Bash(eas --version)",
+      "Bash(pnpm --filter @garage-sale/mobile typecheck)",
+      "Bash(gh run *)"
     ]
   }
 }
