@@ -11,6 +11,10 @@ class FakeAuthRepository implements AuthRepository {
   /// force the boot-time hydrate to still be in flight when they act.
   Duration meDelay = Duration.zero;
 
+  /// Optional artificial delay before `login` resolves/throws, so tests can
+  /// force a login to still be in flight when they act.
+  Duration loginDelay = Duration.zero;
+
   @override
   Future<void> register({
     required String email,
@@ -25,6 +29,9 @@ class FakeAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    if (loginDelay > Duration.zero) {
+      await Future<void>.delayed(loginDelay);
+    }
     if (password != 'password123') {
       throw Exception('Invalid email or password');
     }
