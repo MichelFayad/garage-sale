@@ -7,6 +7,10 @@ import 'package:garage_sale_mobile/auth/token_storage.dart';
 class FakeAuthRepository implements AuthRepository {
   bool registerCalled = false;
 
+  /// Optional artificial delay before `me` resolves/throws, so tests can
+  /// force the boot-time hydrate to still be in flight when they act.
+  Duration meDelay = Duration.zero;
+
   @override
   Future<void> register({
     required String email,
@@ -45,6 +49,9 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<SessionUser> me(String accessToken) async {
+    if (meDelay > Duration.zero) {
+      await Future<void>.delayed(meDelay);
+    }
     if (accessToken == 'access1' || accessToken == 'access2') {
       return const SessionUser(
         id: 'u1',

@@ -33,6 +33,7 @@ class AuthController extends AsyncNotifier<SessionUser?> {
   }
 
   Future<void> login({required String email, required String password}) async {
+    await future;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final result = await _repo.login(email: email, password: password);
@@ -55,6 +56,7 @@ class AuthController extends AsyncNotifier<SessionUser?> {
   }
 
   Future<void> logout() async {
+    await future;
     await _storage.clearTokens();
     state = const AsyncData(null);
   }

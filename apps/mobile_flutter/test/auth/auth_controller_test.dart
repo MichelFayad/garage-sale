@@ -116,5 +116,57 @@ void main() {
       expect(container.read(authControllerProvider).value, isNull);
       expect(await storage.getAccessToken(), isNull);
     });
+
+    test('login is not clobbered by a slow-resolving boot hydrate', () async {
+      final storage = TokenStorage(InMemoryKeyValueStore());
+      await storage.saveTokens(
+        const TokenPair(accessToken: 'stale', refreshToken: 'also-stale'),
+      );
+      final repo = FakeAuthRepository()
+        ..meDelay = const Duration(milliseconds: 50);
+      final container = _buildContainer(repo, storage);
+
+      // Don't await the initial hydrate — call login while it's still in
+      // flight (hydrate's `me()` call is artificially slow and will
+      // eventually resolve to unauthenticated on its own).
+      final loginFuture = container
+          .read(authControllerProvider.notifier)
+          .login(email: 'a@b.com', password: 'password123');
+      await loginFuture;
+
+      // Give the slow boot hydrate a chance to also resolve and, if the
+      // race isn't closed, clobber the freshly-logged-in state. Note: the
+      // clobbered value would still carry id 'u1' (the fake repo always
+      // returns that), so the real tell is the *token* left in storage —
+      // an unguarded hydrate finishing after login overwrites the login's
+      // access1/refresh1 with a spurious access2/refresh2 pair minted by
+      // its own internal refresh() fallback.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(container.read(authControllerProvider).value?.id, 'u1');
+      expect(await storage.getAccessToken(), 'access1');
+      expect(await storage.getRefreshToken(), 'refresh1');
+    });
+
+    test(
+      'register delegates to the repository and does not change auth state',
+      () async {
+        final storage = TokenStorage(InMemoryKeyValueStore());
+        final repo = FakeAuthRepository();
+        final container = _buildContainer(repo, storage);
+        await container.read(authControllerProvider.future);
+
+        await container
+            .read(authControllerProvider.notifier)
+            .register(
+              email: 'new@user.com',
+              password: 'password123',
+              displayName: 'New User',
+            );
+
+        expect(repo.registerCalled, isTrue);
+        expect(container.read(authControllerProvider).value, isNull);
+      },
+    );
   });
 }
