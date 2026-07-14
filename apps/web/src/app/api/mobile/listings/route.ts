@@ -16,10 +16,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   try {
     const listing = await caller.listings.create({
-      type: body.type as ListingType,
+      type: String(body.type ?? '') as ListingType,
       title: String(body.title ?? ''),
       description: String(body.description ?? ''),
-      condition: body.condition as Condition,
+      condition: String(body.condition ?? '') as Condition,
       categoryId: String(body.categoryId ?? ''),
       city: body.city !== undefined ? String(body.city) : undefined,
       neighbourhood: body.neighbourhood !== undefined ? String(body.neighbourhood) : undefined,
