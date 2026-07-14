@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { TRPCError } from '@trpc/server';
 import { appRouter, createContext } from '@garage-sale/api';
 
+const STATUS: Record<string, number> = { UNAUTHORIZED: 401, FORBIDDEN: 403, NOT_FOUND: 404 };
+
 export async function DELETE(
   req: NextRequest,
   ctx: { params: Promise<{ listingId: string }> },
@@ -14,10 +16,7 @@ export async function DELETE(
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof TRPCError) {
-      return NextResponse.json(
-        { error: err.message },
-        { status: err.code === 'UNAUTHORIZED' ? 401 : 400 },
-      );
+      return NextResponse.json({ error: err.message }, { status: STATUS[err.code] ?? 400 });
     }
     return NextResponse.json({ error: 'Failed to remove from watchlist' }, { status: 400 });
   }
