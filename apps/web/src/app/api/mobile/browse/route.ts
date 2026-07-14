@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 import type { Condition, ListingType } from '@garage-sale/db';
 import { appRouter, createContext } from '@garage-sale/api';
 
-const STATUS: Record<string, number> = { UNAUTHORIZED: 401, BAD_REQUEST: 400 };
+const STATUS: Record<string, number> = { UNAUTHORIZED: 401, FORBIDDEN: 403, BAD_REQUEST: 400 };
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const sp = req.nextUrl.searchParams;
@@ -21,6 +21,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (err instanceof TRPCError) {
       return NextResponse.json({ error: err.message }, { status: STATUS[err.code] ?? 400 });
     }
-    return NextResponse.json({ error: 'Search failed' }, { status: 400 });
+    return NextResponse.json({ error: 'Failed to search listings' }, { status: 400 });
   }
 }
