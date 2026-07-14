@@ -16,8 +16,12 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   String? _categoryId;
 
   void _search() {
-    ref.read(browseControllerProvider.notifier).applyFilters(
-          keyword: _keywordController.text.isEmpty ? null : _keywordController.text,
+    ref
+        .read(browseControllerProvider.notifier)
+        .applyFilters(
+          keyword: _keywordController.text.isEmpty
+              ? null
+              : _keywordController.text,
           categoryId: _categoryId,
         );
   }
@@ -51,7 +55,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     items: [
                       const DropdownMenuItem(value: null, child: Text('All')),
                       ...categories.map(
-                        (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                        (c) =>
+                            DropdownMenuItem(value: c.id, child: Text(c.name)),
                       ),
                     ],
                     onChanged: (value) => setState(() => _categoryId = value),

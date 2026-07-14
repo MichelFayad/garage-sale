@@ -35,10 +35,17 @@ class BrowseController extends AsyncNotifier<List<Listing>> {
     await future;
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-      () => _search(keyword: keyword, categoryId: categoryId, condition: condition, type: type),
+      () => _search(
+        keyword: keyword,
+        categoryId: categoryId,
+        condition: condition,
+        type: type,
+      ),
     );
   }
 }
 
 final browseControllerProvider =
-    AsyncNotifierProvider<BrowseController, List<Listing>>(BrowseController.new);
+    AsyncNotifierProvider<BrowseController, List<Listing>>(
+      BrowseController.new,
+    );
