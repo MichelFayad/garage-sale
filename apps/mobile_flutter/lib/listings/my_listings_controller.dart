@@ -16,17 +16,20 @@ class MyListingsController extends AsyncNotifier<List<Listing>> {
   }
 
   Future<void> refresh() async {
+    await future;
     state = const AsyncLoading();
     state = await AsyncValue.guard(_load);
   }
 
   Future<void> markTraded(String id) async {
+    await future;
     final token = await requireAccessToken(ref);
     await _repo.markTraded(id, token);
     await refresh();
   }
 
   Future<void> remove(String id) async {
+    await future;
     final token = await requireAccessToken(ref);
     await _repo.remove(id, token);
     await refresh();
