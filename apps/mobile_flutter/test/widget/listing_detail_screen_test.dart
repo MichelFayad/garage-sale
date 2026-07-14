@@ -47,4 +47,50 @@ void main() {
     expect(find.text('Red bike'), findsOneWidget);
     expect(find.text('A very red bike'), findsOneWidget);
   });
+
+  testWidgets(
+    'tapping the watchlist button adds the listing and updates the icon',
+    (tester) async {
+      final listing = Listing(
+        id: 'l1',
+        ownerId: 'u2',
+        type: ListingType.have,
+        title: 'Red bike',
+        description: 'A very red bike',
+        condition: Condition.good,
+        categoryId: 'c1',
+        status: ListingStatus.active,
+        photos: const [],
+      );
+      final storage = TokenStorage(InMemoryKeyValueStore());
+      await storage.saveTokens(
+        const TokenPair(accessToken: 'tok1', refreshToken: 'ref1'),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listingsRepositoryProvider.overrideWithValue(
+              FakeListingsRepository(mine: [listing]),
+            ),
+            watchlistRepositoryProvider.overrideWithValue(
+              FakeWatchlistRepository(catalog: [listing]),
+            ),
+            tokenStorageProvider.overrideWithValue(storage),
+          ],
+          child: const MaterialApp(home: ListingDetailScreen(listingId: 'l1')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      expect(find.byIcon(Icons.favorite), findsNothing);
+
+      await tester.tap(find.byKey(const Key('watchlist_toggle_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border), findsNothing);
+    },
+  );
 }

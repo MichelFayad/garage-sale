@@ -72,5 +72,30 @@ void main() {
       final entries = container.read(watchlistControllerProvider).value!;
       expect(entries, isEmpty);
     });
+
+    test('toggle adds a not-yet-watched listing', () async {
+      final storage = TokenStorage(InMemoryKeyValueStore());
+      await storage.saveTokens(
+        const TokenPair(accessToken: 'tok1', refreshToken: 'ref1'),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          watchlistRepositoryProvider.overrideWithValue(
+            FakeWatchlistRepository(
+              entries: const [],
+              catalog: [_listing('l1')],
+            ),
+          ),
+          tokenStorageProvider.overrideWithValue(storage),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(watchlistControllerProvider.future);
+
+      await container.read(watchlistControllerProvider.notifier).toggle('l1');
+
+      final entries = container.read(watchlistControllerProvider).value!;
+      expect(entries.any((e) => e.listing.id == 'l1'), isTrue);
+    });
   });
 }

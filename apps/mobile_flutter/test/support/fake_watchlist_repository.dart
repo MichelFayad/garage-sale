@@ -1,10 +1,16 @@
+import 'package:garage_sale_mobile/listings/models/listing.dart';
 import 'package:garage_sale_mobile/listings/models/watchlist_entry.dart';
 import 'package:garage_sale_mobile/listings/watchlist_repository.dart';
 
 class FakeWatchlistRepository implements WatchlistRepository {
-  FakeWatchlistRepository({List<WatchlistEntry> entries = const []})
-    : _entries = entries;
+  FakeWatchlistRepository({
+    List<WatchlistEntry> entries = const [],
+    List<Listing> catalog = const [],
+  }) : _entries = entries,
+       _catalog = catalog;
+
   List<WatchlistEntry> _entries;
+  final List<Listing> _catalog;
 
   @override
   Future<List<WatchlistEntry>> list(String accessToken) async => _entries;
@@ -12,12 +18,11 @@ class FakeWatchlistRepository implements WatchlistRepository {
   @override
   Future<void> add(String listingId, String accessToken) async {
     if (_entries.any((e) => e.listing.id == listingId)) return;
-    // Tests only assert on the resulting count/ids, so a minimal stand-in
-    // listing is fine here — full Listing objects come from FakeListingsRepository.
-    throw UnimplementedError(
-      'FakeWatchlistRepository.add requires seeding via the entries constructor '
-      'param for this test double; extend if a test needs true add() support.',
-    );
+    final listing = _catalog.firstWhere((l) => l.id == listingId);
+    _entries = [
+      ..._entries,
+      WatchlistEntry(id: 'w-$listingId', listing: listing),
+    ];
   }
 
   @override

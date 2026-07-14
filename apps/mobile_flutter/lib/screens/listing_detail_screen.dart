@@ -10,7 +10,10 @@ class ListingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listingAsync = ref.watch(listingByIdProvider(listingId));
-    final watchlistState = ref.watch(watchlistControllerProvider);
+    // Watch so the widget rebuilds when the watchlist changes; read the
+    // notifier below to reuse its isWatched() predicate instead of
+    // duplicating the membership check here.
+    ref.watch(watchlistControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Listing')),
@@ -19,11 +22,9 @@ class ListingDetailScreen extends ConsumerWidget {
         error: (error, _) =>
             const Center(child: Text('Failed to load listing')),
         data: (listing) {
-          final isWatched =
-              watchlistState.valueOrNull?.any(
-                (e) => e.listing.id == listing.id,
-              ) ??
-              false;
+          final isWatched = ref
+              .read(watchlistControllerProvider.notifier)
+              .isWatched(listing.id);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
