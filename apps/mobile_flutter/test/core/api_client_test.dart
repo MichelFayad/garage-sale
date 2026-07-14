@@ -55,5 +55,79 @@ void main() {
 
       expect(captured.headers.containsKey('Authorization'), isFalse);
     });
+
+    test('patch sends bearer header and body, decodes JSON response', () async {
+      late http.Request captured;
+      final mock = MockClient((request) async {
+        captured = request as http.Request;
+        return http.Response(jsonEncode({'id': 'l1'}), 200);
+      });
+      final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
+
+      final result = await client.patch(
+        '/mobile/listings/l1',
+        {'title': 'New title'},
+        accessToken: 'tok123',
+      );
+
+      expect(result, {'id': 'l1'});
+      expect(captured.method, 'PATCH');
+      expect(captured.headers['Authorization'], 'Bearer tok123');
+      expect(jsonDecode(captured.body), {'title': 'New title'});
+    });
+
+    test('delete sends bearer header and decodes JSON response', () async {
+      late http.Request captured;
+      final mock = MockClient((request) async {
+        captured = request as http.Request;
+        return http.Response(jsonEncode({'ok': true}), 200);
+      });
+      final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
+
+      final result = await client.delete(
+        '/mobile/listings/l1',
+        accessToken: 'tok123',
+      );
+
+      expect(result, {'ok': true});
+      expect(captured.method, 'DELETE');
+      expect(captured.headers['Authorization'], 'Bearer tok123');
+    });
+
+    test('getList decodes a JSON array response', () async {
+      final mock = MockClient((request) async {
+        return http.Response(
+          jsonEncode([
+            {'id': 'c1'},
+            {'id': 'c2'},
+          ]),
+          200,
+        );
+      });
+      final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
+
+      final result = await client.getList('/mobile/listings/categories');
+
+      expect(result, [
+        {'id': 'c1'},
+        {'id': 'c2'},
+      ]);
+    });
+
+    test('getList throws ApiException with server error message on non-2xx', () async {
+      final mock = MockClient((request) async {
+        return http.Response(jsonEncode({'error': 'Not a trader session'}), 403);
+      });
+      final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
+
+      expect(
+        () => client.getList('/mobile/listings/mine'),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', 403)
+              .having((e) => e.message, 'message', 'Not a trader session'),
+        ),
+      );
+    });
   });
 }
