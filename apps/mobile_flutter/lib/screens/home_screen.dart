@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../auth/auth_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -15,6 +16,22 @@ class HomeScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Signed in as ${user?.email ?? ''}'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              key: const Key('browse_button'),
+              onPressed: () => context.push('/browse'),
+              child: const Text('Browse'),
+            ),
+            ElevatedButton(
+              key: const Key('my_listings_button'),
+              onPressed: () => context.push('/listings/mine'),
+              child: const Text('My Listings'),
+            ),
+            ElevatedButton(
+              key: const Key('watchlist_button'),
+              onPressed: () => context.push('/watchlist'),
+              child: const Text('Watchlist'),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               key: const Key('logout_button'),
