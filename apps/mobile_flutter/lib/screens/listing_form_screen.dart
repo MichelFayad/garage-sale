@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/providers.dart';
 import '../core/api_exception.dart';
+import '../core/require_token.dart';
 import '../listings/models/listing.dart';
 import '../listings/my_listings_controller.dart';
 import '../listings/providers.dart';
@@ -40,6 +41,17 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _cityController.dispose();
+    for (final controller in _photoControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _submit() async {
     if (_categoryId == null) {
       setState(() => _error = 'Choose a category');
@@ -50,10 +62,7 @@ class _ListingFormScreenState extends ConsumerState<ListingFormScreen> {
       _error = null;
     });
     try {
-      final token = await ref.read(tokenStorageProvider).getAccessToken();
-      if (token == null) {
-        throw const ApiException(401, 'Not authenticated');
-      }
+      final token = await requireAccessTokenFrom(ref.read(tokenStorageProvider));
       final input = ListingInput(
         type: _type,
         title: _titleController.text,

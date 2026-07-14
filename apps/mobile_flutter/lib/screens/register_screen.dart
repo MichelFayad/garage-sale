@@ -17,6 +17,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isSubmitting = false;
   String? _error;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _displayNameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
     setState(() {
       _isSubmitting = true;
