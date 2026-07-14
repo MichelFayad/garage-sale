@@ -41,7 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: '/browse', builder: (context, state) => const BrowseScreen()),
+      GoRoute(
+        path: '/browse',
+        builder: (context, state) => const BrowseScreen(),
+      ),
       GoRoute(
         path: '/watchlist',
         builder: (context, state) => const WatchlistScreen(),

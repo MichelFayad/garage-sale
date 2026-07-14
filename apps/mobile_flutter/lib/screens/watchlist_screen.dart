@@ -13,7 +13,8 @@ class WatchlistScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Watchlist')),
       body: watchlistState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => const Center(child: Text('Failed to load watchlist')),
+        error: (error, _) =>
+            const Center(child: Text('Failed to load watchlist')),
         data: (entries) {
           if (entries.isEmpty) {
             return const Center(child: Text('No watched listings'));
@@ -29,8 +30,9 @@ class WatchlistScreen extends ConsumerWidget {
                 trailing: IconButton(
                   key: Key('watchlist_remove_${entry.listing.id}'),
                   icon: const Icon(Icons.close),
-                  onPressed: () =>
-                      ref.read(watchlistControllerProvider.notifier).toggle(entry.listing.id),
+                  onPressed: () => ref
+                      .read(watchlistControllerProvider.notifier)
+                      .toggle(entry.listing.id),
                 ),
               );
             },
