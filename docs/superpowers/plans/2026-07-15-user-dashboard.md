@@ -78,7 +78,7 @@ describe('trades.unreadMessageCount', () => {
     expect(result).toEqual({ count: 3 });
   });
 
-  it('scopes the count to unread messages from other participants in the caller\'s proposals', async () => {
+  it("scopes the count to unread messages from other participants in the caller's proposals", async () => {
     let capturedWhere: Record<string, unknown> | undefined;
     const api = caller(
       {
@@ -262,9 +262,12 @@ export function DashboardClient() {
   return (
     <div className="space-y-8">
       {isUntrusted && (
-        <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-          Your account is currently flagged as untrusted. This can affect how other traders see
-          you — it's usually caused by missing a trade-confirmation window.
+        <p
+          role="alert"
+          className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+        >
+          Your account is currently flagged as untrusted. This can affect how other traders see you
+          — it's usually caused by missing a trade-confirmation window.
         </p>
       )}
       {noPaymentMethod && (
@@ -318,9 +321,7 @@ export function DashboardClient() {
               className="block rounded border border-gray-200 p-3 hover:border-gray-400"
             >
               <span className="font-medium">{t.listing.title}</span>{' '}
-              <span
-                className={`rounded px-2 py-0.5 text-xs ${TRADE_STATUS_STYLE[t.status] ?? ''}`}
-              >
+              <span className={`rounded px-2 py-0.5 text-xs ${TRADE_STATUS_STYLE[t.status] ?? ''}`}>
                 {t.status}
               </span>{' '}
               <span className="text-xs text-gray-500">

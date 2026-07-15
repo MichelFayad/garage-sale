@@ -77,6 +77,7 @@ Nobody had actually run `next dev` end-to-end before (CI only runs typecheck/lin
 2. **Workspace packages' `.js`-extension relative imports don't resolve under webpack.** `packages/{api,auth,core,db}` use TS's `moduleResolution: "Bundler"` convention of writing `./root.js` in a relative import that actually resolves to `root.ts`. Vite/esbuild handle this natively; webpack (Next's default bundler) doesn't, and these packages are consumed via `transpilePackages`. Fixed with a `webpack.resolve.extensionAlias` in `apps/web/next.config.mjs`.
 
 3. **Prisma's native query-engine binary isn't found under webpack + pnpm + Windows.** Even with `@prisma/client` marked in `serverExternalPackages`, Next's file-tracing doesn't copy the sibling `.prisma/client/query_engine-windows.dll.node` next to the externalized package. (We tried moving the Prisma `generator client` to a fixed custom `output` path instead — don't do that: it breaks the existing TS2742 "inferred type cannot be named" issue in `packages/api` in a way that's much harder to work around, because the type now points at a deeper, less portable `node_modules` path.) Fixed instead with `PRISMA_QUERY_ENGINE_LIBRARY` in `.env`, pointing straight at the binary. **This path is keyed to a pnpm virtual-store content hash** — if a future `pnpm install` changes the lockfile and Prisma errors again with "could not locate the Query Engine", re-find it and update both `.env` and `apps/web/.env`:
+
    ```bash
    find node_modules/.pnpm -iname "query_engine-windows.dll.node"
    ```
