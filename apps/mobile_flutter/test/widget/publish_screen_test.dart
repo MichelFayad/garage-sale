@@ -109,4 +109,58 @@ void main() {
 
     expect(find.byKey(const Key('publish_button')), findsOneWidget);
   });
+
+  testWidgets('shows an error when the card sheet fails', (tester) async {
+    final tokenStorage = await _seededTokenStorage();
+    final repo = FakeBillingRepository();
+    Future<CardSheetResult> fakeCardSheet(BillingRepository r, String token) async {
+      return const CardSheetResult(ok: false, error: 'Your card was declined');
+    }
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingRepositoryProvider.overrideWithValue(repo),
+          tokenStorageProvider.overrideWithValue(tokenStorage),
+        ],
+        child: MaterialApp(
+          home: PublishScreen(listingId: 'l1', presentCardSheet: fakeCardSheet),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_card_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your card was declined'), findsOneWidget);
+    expect(find.byKey(const Key('publish_button')), findsNothing);
+  });
+
+  testWidgets('does nothing when the card sheet is cancelled', (tester) async {
+    final tokenStorage = await _seededTokenStorage();
+    final repo = FakeBillingRepository();
+    Future<CardSheetResult> fakeCardSheet(BillingRepository r, String token) async {
+      return const CardSheetResult(ok: false, cancelled: true);
+    }
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          billingRepositoryProvider.overrideWithValue(repo),
+          tokenStorageProvider.overrideWithValue(tokenStorage),
+        ],
+        child: MaterialApp(
+          home: PublishScreen(listingId: 'l1', presentCardSheet: fakeCardSheet),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_card_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('add_card_button')), findsOneWidget);
+    expect(find.byKey(const Key('publish_button')), findsNothing);
+  });
 }

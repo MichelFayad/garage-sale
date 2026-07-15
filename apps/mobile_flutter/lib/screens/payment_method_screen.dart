@@ -6,6 +6,7 @@ import '../billing/billing_repository.dart';
 import '../billing/card_sheet.dart';
 import '../billing/card_sheet.dart' as card_sheet;
 import '../billing/providers.dart';
+import '../core/api_exception.dart';
 import '../core/require_token.dart';
 
 class PaymentMethodScreen extends ConsumerStatefulWidget {
@@ -28,14 +29,21 @@ class _PaymentMethodScreenState extends ConsumerState<PaymentMethodScreen> {
       _isBusy = true;
       _error = null;
     });
-    final token = await requireAccessTokenFrom(ref.read(tokenStorageProvider));
-    final result = await widget.presentCardSheet(ref.read(billingRepositoryProvider), token);
-    if (mounted) setState(() => _isBusy = false);
-    if (!result.ok && !result.cancelled) {
-      setState(() => _error = result.error ?? 'Could not add card');
-      return;
+    try {
+      final token = await requireAccessTokenFrom(ref.read(tokenStorageProvider));
+      final result = await widget.presentCardSheet(ref.read(billingRepositoryProvider), token);
+      if (!result.ok && !result.cancelled) {
+        setState(() => _error = result.error ?? 'Could not add card');
+        return;
+      }
+      if (result.ok) ref.invalidate(billingControllerProvider);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = 'Could not add card');
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
     }
-    if (result.ok) ref.invalidate(billingControllerProvider);
   }
 
   Future<void> _removeCard() async {
