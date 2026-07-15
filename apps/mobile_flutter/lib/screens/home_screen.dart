@@ -32,6 +32,16 @@ class HomeScreen extends ConsumerWidget {
               onPressed: () => context.push('/watchlist'),
               child: const Text('Watchlist'),
             ),
+            ElevatedButton(
+              key: const Key('trades_button'),
+              onPressed: () => context.push('/trades'),
+              child: const Text('Trades'),
+            ),
+            ElevatedButton(
+              key: const Key('blocks_button'),
+              onPressed: () => context.push('/blocks'),
+              child: const Text('Blocked traders'),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               key: const Key('logout_button'),

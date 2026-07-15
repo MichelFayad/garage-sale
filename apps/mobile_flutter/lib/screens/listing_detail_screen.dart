@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../listings/listing_detail_provider.dart';
 import '../listings/watchlist_controller.dart';
 
@@ -61,8 +62,8 @@ class ListingDetailScreen extends ConsumerWidget {
                     const Spacer(),
                     ElevatedButton(
                       key: const Key('propose_trade_button'),
-                      onPressed: null,
-                      child: const Text('Propose trade (coming soon)'),
+                      onPressed: () => context.push('/trades/propose/${listing.id}'),
+                      child: const Text('Propose trade'),
                     ),
                   ],
                 ),
