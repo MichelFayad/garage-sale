@@ -9,6 +9,7 @@ class FakeBlocksRepository implements BlocksRepository {
   final List<BlockEntry> _entries;
   final Set<String> _blockedIds;
   int unblockCalls = 0;
+  int blockCalls = 0;
 
   @override
   Future<List<BlockEntry>> list(String accessToken) async => List.of(_entries);
@@ -18,6 +19,7 @@ class FakeBlocksRepository implements BlocksRepository {
 
   @override
   Future<void> block(String userId, String? reason, String accessToken) async {
+    blockCalls++;
     _blockedIds.add(userId);
   }
 
