@@ -1,10 +1,13 @@
-export default function UserDashboard() {
+import type { Metadata } from 'next';
+import { DashboardClient } from './DashboardClient';
+
+export const metadata: Metadata = { title: 'Dashboard' };
+
+export default function DashboardPage() {
   return (
     <section className="py-8">
-      <h1 className="text-2xl font-semibold">Your dashboard</h1>
-      <p className="mt-2 text-gray-600">
-        Listings, trade proposals, and messages appear here. Features land P5–P8.
-      </p>
+      <h1 className="mb-6 text-2xl font-semibold">Your dashboard</h1>
+      <DashboardClient />
     </section>
   );
 }
