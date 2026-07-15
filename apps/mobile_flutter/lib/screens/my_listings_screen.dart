@@ -49,6 +49,8 @@ class MyListingsScreen extends ConsumerWidget {
                       await notifier.markTraded(listing.id);
                     } else if (action == 'remove') {
                       await notifier.remove(listing.id);
+                    } else if (action == 'publish') {
+                      context.push('/listings/${listing.id}/publish');
                     }
                   },
                   itemBuilder: (context) => [
@@ -60,11 +62,7 @@ class MyListingsScreen extends ConsumerWidget {
                       ),
                     const PopupMenuItem(value: 'remove', child: Text('Remove')),
                     if (listing.status == ListingStatus.draft)
-                      const PopupMenuItem(
-                        value: 'publish',
-                        enabled: false,
-                        child: Text('Publish (coming soon)'),
-                      ),
+                      const PopupMenuItem(value: 'publish', child: Text('Publish')),
                   ],
                 ),
               );

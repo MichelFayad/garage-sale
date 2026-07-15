@@ -10,7 +10,9 @@ import '../screens/listing_detail_screen.dart';
 import '../screens/listing_form_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/my_listings_screen.dart';
+import '../screens/payment_method_screen.dart';
 import '../screens/propose_trade_screen.dart';
+import '../screens/publish_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/trade_detail_screen.dart';
 import '../screens/trades_screen.dart';
@@ -53,6 +55,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/watchlist',
         builder: (context, state) => const WatchlistScreen(),
       ),
+      GoRoute(
+        path: '/billing',
+        builder: (context, state) => const PaymentMethodScreen(),
+      ),
       // Literal segments must come before the /listings/:id family below —
       // go_router matches top-level routes in list order.
       GoRoute(
@@ -67,6 +73,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/listings/:id/edit',
         builder: (context, state) =>
             ListingFormScreen(existing: state.extra as Listing?),
+      ),
+      GoRoute(
+        path: '/listings/:id/publish',
+        builder: (context, state) =>
+            PublishScreen(listingId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/listings/:id',

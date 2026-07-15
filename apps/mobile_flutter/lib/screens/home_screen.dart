@@ -42,6 +42,11 @@ class HomeScreen extends ConsumerWidget {
               onPressed: () => context.push('/blocks'),
               child: const Text('Blocked traders'),
             ),
+            ElevatedButton(
+              key: const Key('payment_method_button'),
+              onPressed: () => context.push('/billing'),
+              child: const Text('Payment method'),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               key: const Key('logout_button'),

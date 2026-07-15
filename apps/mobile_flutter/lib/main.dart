@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'core/env.dart';
 import 'router/app_router.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = Env.stripePublishableKey;
+  await Stripe.instance.applySettings();
   runApp(const ProviderScope(child: GarageSaleApp()));
 }
 
