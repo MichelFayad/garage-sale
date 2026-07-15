@@ -108,6 +108,22 @@ export const tradesRouter = router({
       .then((count) => ({ count }));
   }),
 
+  /** Mark the other party's messages on a proposal as read (called on thread open). */
+  markThreadRead: protectedProcedure
+    .input(z.object({ proposalId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await participantProposal(ctx.prisma, input.proposalId, ctx.principal.userId);
+      const result = await ctx.prisma.message.updateMany({
+        where: {
+          proposalId: input.proposalId,
+          senderId: { not: ctx.principal.userId },
+          readAt: null,
+        },
+        data: { readAt: new Date() },
+      });
+      return { count: result.count };
+    }),
+
   byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     await participantProposal(ctx.prisma, input.id, ctx.principal.userId);
     return ctx.prisma.tradeProposal.findUniqueOrThrow({

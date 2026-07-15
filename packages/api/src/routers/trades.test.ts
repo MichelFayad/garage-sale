@@ -66,3 +66,46 @@ describe('trades.unreadMessageCount', () => {
     });
   });
 });
+
+describe('trades.markThreadRead', () => {
+  it('rejects a non-participant with FORBIDDEN', async () => {
+    const api = caller(
+      {
+        tradeProposal: {
+          findUnique: async () => ({ id: 'p1', proposerId: 'u1', ownerId: 'u2' }),
+        },
+      },
+      { userId: 'u3', role: 'TRADER', accountStatus: 'ACTIVE' },
+    );
+    const code = await codeOf(() => api.trades.markThreadRead({ proposalId: 'p1' }));
+    expect(code).toBe('FORBIDDEN');
+  });
+
+  it("scopes the update to the other party's unread messages and returns the count", async () => {
+    let capturedArgs: Record<string, unknown> | undefined;
+    const api = caller(
+      {
+        tradeProposal: {
+          findUnique: async () => ({ id: 'p1', proposerId: 'u1', ownerId: 'u2' }),
+        },
+        message: {
+          updateMany: async (args: Record<string, unknown>) => {
+            capturedArgs = args;
+            return { count: 2 };
+          },
+        },
+      },
+      { userId: 'u1', role: 'TRADER', accountStatus: 'ACTIVE' },
+    );
+
+    const result = await api.trades.markThreadRead({ proposalId: 'p1' });
+
+    expect(result).toEqual({ count: 2 });
+    expect(capturedArgs?.where).toEqual({
+      proposalId: 'p1',
+      senderId: { not: 'u1' },
+      readAt: null,
+    });
+    expect((capturedArgs?.data as { readAt: Date }).readAt).toBeInstanceOf(Date);
+  });
+});

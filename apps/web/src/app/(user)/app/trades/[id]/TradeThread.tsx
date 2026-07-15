@@ -26,6 +26,7 @@ export function TradeThread({ id }: { id: string }) {
       ]);
       setProposal(p);
       setMessages(m);
+      void trpc.trades.markThreadRead.mutate({ proposalId: id }).catch(() => {});
       setMe(profile.id);
       const other = p.proposerId === profile.id ? p.ownerId : p.proposerId;
       setBlocked((await trpc.blocks.status.query({ userId: other })).blocked);
