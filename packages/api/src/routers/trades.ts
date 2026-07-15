@@ -92,6 +92,22 @@ export const tradesRouter = router({
     });
   }),
 
+  /** Count of unread messages sent to the caller across all their proposals. */
+  unreadMessageCount: protectedProcedure.query(({ ctx }) => {
+    traderOnly(ctx.principal.role);
+    return ctx.prisma.message
+      .count({
+        where: {
+          readAt: null,
+          senderId: { not: ctx.principal.userId },
+          proposal: {
+            OR: [{ proposerId: ctx.principal.userId }, { ownerId: ctx.principal.userId }],
+          },
+        },
+      })
+      .then((count) => ({ count }));
+  }),
+
   byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     await participantProposal(ctx.prisma, input.id, ctx.principal.userId);
     return ctx.prisma.tradeProposal.findUniqueOrThrow({
