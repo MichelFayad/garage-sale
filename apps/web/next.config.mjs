@@ -16,9 +16,15 @@ const analyticsOrigin = (() => {
 // analytics origin is added for the script + beacon. 'unsafe-inline' is kept
 // for scripts/styles because the App Router emits inline bootstrap scripts and
 // JSON-LD without a nonce — tightening to nonce-based CSP is a follow-up.
+// Next dev mode wraps webpack modules in eval() for source maps/HMR — needs
+// 'unsafe-eval' or the client bundle silently fails to execute (no hydration,
+// no console error visible through most tooling). Production builds don't use
+// eval, so this only applies in dev.
+const scriptSrcEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://js.stripe.com ${analyticsOrigin}`,
+  `script-src 'self' 'unsafe-inline'${scriptSrcEval} https://js.stripe.com ${analyticsOrigin}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
@@ -63,10 +69,12 @@ const nextConfig = {
   // `.ts` source files. Webpack doesn't map that by default (only Vite/esbuild
   // do), so transpiled workspace packages 404 on their own internal imports
   // without this alias.
-  webpack: (config) => {
-    config.resolve.extensionAlias = {
-      '.js': ['.ts', '.tsx', '.js'],
-    };
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.extensionAlias = {
+        '.js': ['.ts', '.tsx', '.js'],
+      };
+    }
     return config;
   },
   async headers() {
