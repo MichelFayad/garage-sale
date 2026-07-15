@@ -1,6 +1,8 @@
 // Seed — dev data. Idempotent (safe to re-run).
 // Creates: a Super Admin, the default per-post ServiceFeeConfig, categories,
-// platform settings, and a couple of sample traders with listings.
+// platform settings, two sample traders, and a handful of listings across
+// them (mixed HAVE/WANT, categories, conditions) for browse/watchlist/trade
+// testing.
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -180,7 +182,7 @@ async function main() {
       paymentValid: true,
     },
   });
-  await prisma.user.upsert({
+  const bob = await prisma.user.upsert({
     where: { email: 'bob@example.com' },
     update: {},
     create: {
@@ -194,23 +196,104 @@ async function main() {
     },
   });
 
-  // A sample ACTIVE listing for Alice.
-  const listingExists = await prisma.listing.findFirst({ where: { ownerId: alice.id } });
-  if (!listingExists) {
-    await prisma.listing.create({
-      data: {
-        ownerId: alice.id,
-        type: 'HAVE',
-        title: 'Vintage road bike',
-        description: 'Steel frame, recently tuned. Looking to swap for camping gear.',
-        condition: 'GOOD',
-        categoryId: 'seed-cat-6', // Sports & Outdoors
-        city: 'Austin',
-        neighbourhood: 'Downtown',
+  // Sample ACTIVE listings for Alice and Bob (mix of HAVE/WANT, categories,
+  // conditions) so browse/watchlist/propose-trade flows have real data to
+  // exercise against.
+  const SAMPLE_LISTINGS: {
+    id: string;
+    ownerId: string;
+    type: 'HAVE' | 'WANT';
+    title: string;
+    description: string;
+    condition: 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'POOR';
+    categoryId: string;
+    city: string;
+    neighbourhood: string;
+    wantedDescription?: string;
+    wantedCategoryId?: string;
+  }[] = [
+    {
+      id: 'seed-listing-1',
+      ownerId: alice.id,
+      type: 'HAVE',
+      title: 'Vintage road bike',
+      description: 'Steel frame, recently tuned. Looking to swap for camping gear.',
+      condition: 'GOOD',
+      categoryId: 'seed-cat-6', // Sports & Outdoors
+      city: 'Austin',
+      neighbourhood: 'Downtown',
+      wantedDescription: 'Tent, sleeping bag, or a camp stove.',
+      wantedCategoryId: 'seed-cat-6',
+    },
+    {
+      id: 'seed-listing-2',
+      ownerId: alice.id,
+      type: 'HAVE',
+      title: 'Mid-century record player',
+      description: 'Works great, needs a new needle. Comes with a small vinyl collection.',
+      condition: 'FAIR',
+      categoryId: 'seed-cat-0', // Electronics
+      city: 'Austin',
+      neighbourhood: 'Downtown',
+    },
+    {
+      id: 'seed-listing-3',
+      ownerId: alice.id,
+      type: 'WANT',
+      title: 'Looking for: kids bicycle',
+      description: 'Any condition, roughly ages 6-8. For a birthday.',
+      condition: 'GOOD',
+      categoryId: 'seed-cat-5', // Toys & Games
+      city: 'Austin',
+      neighbourhood: 'Downtown',
+    },
+    {
+      id: 'seed-listing-4',
+      ownerId: bob.id,
+      type: 'HAVE',
+      title: 'Solid oak dining table',
+      description: 'Seats 6. A couple of scratches on the top but very sturdy.',
+      condition: 'GOOD',
+      categoryId: 'seed-cat-1', // Furniture
+      city: 'Austin',
+      neighbourhood: 'East Side',
+      wantedDescription: 'Power tools or a good mountain bike.',
+      wantedCategoryId: 'seed-cat-7',
+    },
+    {
+      id: 'seed-listing-5',
+      ownerId: bob.id,
+      type: 'HAVE',
+      title: 'Cordless drill + bit set',
+      description: 'Barely used, includes charger and two batteries.',
+      condition: 'LIKE_NEW',
+      categoryId: 'seed-cat-7', // Tools
+      city: 'Austin',
+      neighbourhood: 'East Side',
+    },
+    {
+      id: 'seed-listing-6',
+      ownerId: bob.id,
+      type: 'HAVE',
+      title: 'Box of assorted paperbacks',
+      description: 'Mostly sci-fi and mystery, ~20 books.',
+      condition: 'GOOD',
+      categoryId: 'seed-cat-3', // Books & Media
+      city: 'Austin',
+      neighbourhood: 'East Side',
+    },
+  ];
+
+  for (const listing of SAMPLE_LISTINGS) {
+    const { id, ...data } = listing;
+    await prisma.listing.upsert({
+      where: { id },
+      update: {},
+      create: {
+        id,
+        ...data,
         status: 'ACTIVE',
         publishedAt: new Date(),
-        wantedDescription: 'Tent, sleeping bag, or a camp stove.',
-        wantedCategoryId: 'seed-cat-6',
       },
     });
   }
