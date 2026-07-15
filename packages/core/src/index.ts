@@ -5,5 +5,6 @@ export * from './constants.js';
 export * from './fee.js';
 export * from './listing.js';
 export * from './ratelimit.js';
+export * from './ratelimit-redis.js';
 export * from './roles.js';
 export * from './trust.js';
