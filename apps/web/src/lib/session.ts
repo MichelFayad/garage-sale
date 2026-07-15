@@ -3,7 +3,7 @@
 // token rides `gs_refresh`. Mirrors the cookies the OAuth callback sets.
 
 import type { NextResponse } from 'next/server';
-import { SESSION_COOKIE } from '@garage-sale/auth';
+import { SESSION_COOKIE } from '@garage-sale/auth/jwt';
 
 export const REFRESH_COOKIE = 'gs_refresh';
 

@@ -48,6 +48,9 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Keep Prisma's native query-engine binary out of the webpack bundle so it
+  // loads from node_modules at runtime instead of needing to be copied.
+  serverExternalPackages: ['@prisma/client'],
   // Workspace packages ship raw TypeScript — let Next compile them.
   transpilePackages: [
     '@garage-sale/api',
@@ -55,6 +58,17 @@ const nextConfig = {
     '@garage-sale/core',
     '@garage-sale/db',
   ],
+  // Workspace packages use TS's "Bundler" moduleResolution convention of
+  // writing `.js` extensions in relative imports that actually resolve to
+  // `.ts` source files. Webpack doesn't map that by default (only Vite/esbuild
+  // do), so transpiled workspace packages 404 on their own internal imports
+  // without this alias.
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js'],
+    };
+    return config;
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

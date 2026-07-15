@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createTokenPair, SESSION_COOKIE, type TokenClaims, verifyToken } from '@garage-sale/auth';
+import {
+  createTokenPair,
+  SESSION_COOKIE,
+  type TokenClaims,
+  verifyToken,
+} from '@garage-sale/auth/jwt';
 import { REFRESH_COOKIE, setSessionCookies } from './lib/session';
 
 // Role routing + auth guards for the trader (/app) and admin (/admin) portals.
