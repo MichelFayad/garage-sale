@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../../../../lib/trpc';
 import { useCan } from '../../../../components/AdminRole';
+import { revalidateContentCache } from './actions';
 
 type PageRow = Awaited<ReturnType<typeof trpc.admin.content.list.query>>[number];
 type PageDetail = Awaited<ReturnType<typeof trpc.admin.content.byId.query>>;
@@ -32,15 +33,17 @@ export function ContentClient() {
     e.preventDefault();
     setError(null);
     if (!draft.slug.trim() || !draft.title.trim()) return;
+    const slug = draft.slug.trim();
     try {
       await trpc.admin.content.create.mutate({
-        slug: draft.slug.trim(),
+        slug,
         title: draft.title.trim(),
         description: draft.description.trim() || undefined,
         body: draft.body,
       });
       setDraft(EMPTY);
       await load();
+      await revalidateContentCache(slug);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create');
     }
@@ -60,6 +63,7 @@ export function ContentClient() {
     });
     setSelected(null);
     await load();
+    await revalidateContentCache(selected.slug);
   }
 
   async function togglePublish(row: PageRow) {
@@ -68,13 +72,15 @@ export function ContentClient() {
       status: row.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
     });
     await load();
+    await revalidateContentCache(row.slug);
   }
 
   async function remove(id: string) {
     if (!window.confirm('Delete this page? This cannot be undone.')) return;
-    await trpc.admin.content.delete.mutate({ id });
+    const deleted = await trpc.admin.content.delete.mutate({ id });
     if (selected?.id === id) setSelected(null);
     await load();
+    await revalidateContentCache(deleted.slug);
   }
 
   return (
