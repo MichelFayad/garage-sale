@@ -25,9 +25,11 @@ class MessagesController extends FamilyAsyncNotifier<List<TradeMessage>, String>
   Future<void> send(String body) async {
     await future;
     final token = await requireAccessToken(ref);
-    await _repo.send(arg, body, token);
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _load(arg));
+    state = await AsyncValue.guard(() async {
+      await _repo.send(arg, body, token);
+      return _load(arg);
+    });
   }
 }
 

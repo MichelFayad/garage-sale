@@ -53,9 +53,11 @@ class TradeDetailController extends FamilyAsyncNotifier<Proposal, String> {
   Future<void> rate(int stars, String? review) async {
     await future;
     final token = await requireAccessToken(ref);
-    await _repo.rate(arg, stars, review, token);
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _load(arg));
+    state = await AsyncValue.guard(() async {
+      await _repo.rate(arg, stars, review, token);
+      return _load(arg);
+    });
   }
 
   /// Counters this proposal, returning the id of the newly created proposal.

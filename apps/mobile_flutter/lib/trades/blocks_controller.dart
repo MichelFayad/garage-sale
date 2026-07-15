@@ -19,6 +19,7 @@ class BlocksController extends AsyncNotifier<List<BlockEntry>> {
     await future;
     final token = await requireAccessToken(ref);
     await _repo.unblock(userId, token);
+    ref.invalidate(blockStatusProvider(userId));
     state = const AsyncLoading();
     state = await AsyncValue.guard(_load);
   }
