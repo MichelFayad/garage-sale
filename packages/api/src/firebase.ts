@@ -12,9 +12,7 @@ export function firebaseApp(): App {
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKey = process.env.FIREBASE_PRIVATE_KEY;
     if (!projectId || !clientEmail || !privateKey) {
-      throw new Error(
-        'FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY are not set',
-      );
+      throw new Error('FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY are not set');
     }
     app =
       getApps()[0] ??
