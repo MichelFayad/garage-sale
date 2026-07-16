@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../push/push_registration.dart';
 import 'auth_repository.dart';
 import 'providers.dart';
 import 'session_user.dart';
@@ -57,6 +58,7 @@ class AuthController extends AsyncNotifier<SessionUser?> {
 
   Future<void> logout() async {
     await future;
+    await ref.read(pushRegistrationControllerProvider.notifier).unregisterDevice();
     await _storage.clearTokens();
     state = const AsyncData(null);
   }
