@@ -1,10 +1,11 @@
-// Push notifications via the Expo Push API. Tokens are registered per device by the
-// mobile app; sendPush fans a message out to all of a user's tokens. Mirrors email.ts:
-// failures are swallowed so a push problem never breaks the triggering mutation.
+// Push notifications via Firebase Cloud Messaging. Tokens are registered per
+// device by the mobile app; sendPush fans a message out to all of a user's
+// tokens. Mirrors email.ts: failures are swallowed so a push problem never
+// breaks the triggering mutation.
 
 import type { PrismaClient } from '@garage-sale/db';
-
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+import { getMessaging } from 'firebase-admin/messaging';
+import { firebaseApp } from './firebase.js';
 
 export async function registerPushToken(
   prisma: PrismaClient,
@@ -23,10 +24,11 @@ export async function unregisterPushToken(prisma: PrismaClient, token: string): 
   await prisma.pushToken.deleteMany({ where: { token } });
 }
 
-interface ExpoTicket {
-  status?: string;
-  details?: { error?: string };
-}
+/** FCM error codes that mean the token is permanently dead (app uninstalled, etc.). */
+const DEAD_TOKEN_CODES = new Set([
+  'messaging/registration-token-not-registered',
+  'messaging/invalid-registration-token',
+]);
 
 /** Send a push to every device the user has registered. No-op when none. */
 export async function sendPush(
@@ -42,30 +44,18 @@ export async function sendPush(
   });
   if (tokens.length === 0) return;
 
-  const messages = tokens.map((t) => ({ to: t.token, title, body, sound: 'default', data }));
-
   try {
-    const res = await fetch(EXPO_PUSH_URL, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify(messages),
+    const response = await getMessaging(firebaseApp()).sendEachForMulticast({
+      tokens: tokens.map((t) => t.token),
+      notification: { title, body },
+      data,
     });
-    const json = (await res.json()) as { data?: ExpoTicket[] };
-    // Prune tokens Expo reports as no longer registered (app uninstalled, etc.).
-    const tickets = json.data;
-    if (Array.isArray(tickets)) {
-      const dead = tickets
-        .map((ticket, i) => ({ ticket, token: messages[i]?.to }))
-        .filter(
-          (x) =>
-            x.token &&
-            x.ticket?.status === 'error' &&
-            x.ticket?.details?.error === 'DeviceNotRegistered',
-        )
-        .map((x) => x.token as string);
-      if (dead.length > 0) {
-        await prisma.pushToken.deleteMany({ where: { token: { in: dead } } });
-      }
+    const dead = response.responses
+      .map((r, i) => ({ r, token: tokens[i]!.token }))
+      .filter(({ r }) => !r.success && r.error && DEAD_TOKEN_CODES.has(r.error.code))
+      .map(({ token }) => token);
+    if (dead.length > 0) {
+      await prisma.pushToken.deleteMany({ where: { token: { in: dead } } });
     }
   } catch {
     // Swallow — a push failure must not break the mutation that triggered it.
