@@ -9,11 +9,7 @@ dist/
 out/
 *.tsbuildinfo
 
-# expo
-.expo/
-.expo-shared/
-apps/mobile/android/
-apps/mobile/ios/
+# mobile signing / secrets (kept generic; native dirs are tracked for Flutter)
 *.jks
 *.p8
 *.p12
