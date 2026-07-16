@@ -80,4 +80,31 @@ describe('sendPush', () => {
 
     await expect(sendPush(prisma, 'u1', 'Title', 'Body')).resolves.toBeUndefined();
   });
+
+  it('prunes legacy Expo-format tokens and never sends them to FCM', async () => {
+    const prisma = fakePrisma([{ token: 'ExponentPushToken[abc]' }, { token: 'fcm1' }]);
+    sendEachForMulticast.mockResolvedValue({ responses: [{ success: true }] });
+
+    await sendPush(prisma, 'u1', 'Title', 'Body');
+
+    // The Expo token is deleted up front...
+    expect(prisma.pushToken.deleteMany).toHaveBeenCalledWith({
+      where: { token: { in: ['ExponentPushToken[abc]'] } },
+    });
+    // ...and only the real FCM token is sent.
+    expect(sendEachForMulticast).toHaveBeenCalledWith(
+      expect.objectContaining({ tokens: ['fcm1'] }),
+    );
+  });
+
+  it('no-ops FCM (but still prunes) when the user only has Expo tokens', async () => {
+    const prisma = fakePrisma([{ token: 'ExpoPushToken[xyz]' }]);
+
+    await sendPush(prisma, 'u1', 'Title', 'Body');
+
+    expect(prisma.pushToken.deleteMany).toHaveBeenCalledWith({
+      where: { token: { in: ['ExpoPushToken[xyz]'] } },
+    });
+    expect(sendEachForMulticast).not.toHaveBeenCalled();
+  });
 });

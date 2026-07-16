@@ -30,6 +30,17 @@ const DEAD_TOKEN_CODES = new Set([
   'messaging/invalid-registration-token',
 ]);
 
+/**
+ * Legacy Expo push tokens (registered by the pre-Flutter RN app) look like
+ * `ExponentPushToken[...]` / `ExpoPushToken[...]`. They are NOT valid FCM
+ * registration tokens — `sendEachForMulticast` rejects them with an error
+ * outside DEAD_TOKEN_CODES, so they'd never be pruned and would linger in the
+ * table forever. Recognise them so we can drop them instead of sending.
+ */
+function isExpoToken(token: string): boolean {
+  return token.startsWith('ExponentPushToken[') || token.startsWith('ExpoPushToken[');
+}
+
 /** Send a push to every device the user has registered. No-op when none. */
 export async function sendPush(
   prisma: PrismaClient,
@@ -38,10 +49,19 @@ export async function sendPush(
   body: string,
   data?: Record<string, string>,
 ): Promise<void> {
-  const tokens = await prisma.pushToken.findMany({
+  const rows = await prisma.pushToken.findMany({
     where: { userId },
     select: { token: true },
   });
+  if (rows.length === 0) return;
+
+  // Prune any legacy Expo-format tokens up front — they can't be delivered via
+  // FCM, so they'd otherwise never be cleaned up (see isExpoToken).
+  const legacy = rows.filter((t) => isExpoToken(t.token)).map((t) => t.token);
+  if (legacy.length > 0) {
+    await prisma.pushToken.deleteMany({ where: { token: { in: legacy } } });
+  }
+  const tokens = rows.filter((t) => !isExpoToken(t.token));
   if (tokens.length === 0) return;
 
   try {
