@@ -5,9 +5,7 @@ import 'package:garage_sale_mobile/listings/models/listing.dart';
 /// Test double. Seed `mine` in the constructor; `create`/`update` append/replace
 /// in place so screen-level flows can be exercised without a real backend.
 class FakeListingsRepository implements ListingsRepository {
-  FakeListingsRepository({List<Listing> mine = const [], List<Category> categories = const []})
-      : _mine = mine,
-        _categories = categories;
+  FakeListingsRepository({this._mine = const [], this._categories = const []});
 
   final List<Category> _categories;
   List<Listing> _mine;

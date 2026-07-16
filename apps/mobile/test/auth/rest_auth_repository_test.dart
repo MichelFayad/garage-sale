@@ -43,7 +43,7 @@ void main() {
       () async {
         late http.Request captured;
         final mock = MockClient((request) async {
-          captured = request as http.Request;
+          captured = request;
           return http.Response(
             jsonEncode({
               'user': {
@@ -79,7 +79,7 @@ void main() {
     test('me sends the bearer token and parses the trader session', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(
           jsonEncode({
             'kind': 'trader',

@@ -11,7 +11,7 @@ void main() {
     test('search sends the bearer token and no query params when filters are empty', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode([]), 200);
       });
       final repo = RestBrowseRepository(
@@ -28,7 +28,7 @@ void main() {
     test('search encodes keyword, category, condition, and type filters', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode([]), 200);
       });
       final repo = RestBrowseRepository(

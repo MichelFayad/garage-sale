@@ -10,7 +10,7 @@ void main() {
     test('register posts the token and platform', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestPushRepository(
@@ -28,7 +28,7 @@ void main() {
     test('register omits platform when null', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestPushRepository(
@@ -43,7 +43,7 @@ void main() {
     test('unregister posts the token', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestPushRepository(

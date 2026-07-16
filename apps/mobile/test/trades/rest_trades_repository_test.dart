@@ -67,7 +67,7 @@ void main() {
     test('accept POSTs to /accept with an empty body', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_proposalJson(status: 'ACCEPTED')), 200);
       });
       final repo = RestTradesRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
@@ -107,7 +107,7 @@ void main() {
     test('decline POSTs to /decline with an empty body', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_proposalJson(status: 'DECLINED')), 200);
       });
       final repo = RestTradesRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
@@ -123,7 +123,7 @@ void main() {
       late Map<String, dynamic> sentBody;
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         sentBody = jsonDecode(request.body) as Map<String, dynamic>;
         return http.Response(jsonEncode(_proposalJson(id: 'p2')), 200);
       });
@@ -139,7 +139,7 @@ void main() {
     test('cancel POSTs to /cancel with an empty body', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_proposalJson(status: 'CANCELLED')), 200);
       });
       final repo = RestTradesRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));
@@ -154,7 +154,7 @@ void main() {
     test('confirm POSTs to /confirm with an empty body', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_proposalJson(status: 'COMPLETED')), 200);
       });
       final repo = RestTradesRepository(ApiClient(httpClient: mock, baseUrl: 'http://test.local/api'));

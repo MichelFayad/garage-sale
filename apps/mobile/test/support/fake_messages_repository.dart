@@ -4,11 +4,10 @@ import 'package:garage_sale_mobile/trades/models/trade_message.dart';
 class FakeMessagesRepository implements MessagesRepository {
   FakeMessagesRepository({
     List<TradeMessage> messages = const [],
-    int unread = 0,
+    this._unread = 0,
     this.sendSenderId = 'me',
     this.sendSenderName = 'Me',
-  }) : _messages = List.of(messages),
-       _unread = unread;
+  }) : _messages = List.of(messages);
 
   final String sendSenderId;
   final String sendSenderName;

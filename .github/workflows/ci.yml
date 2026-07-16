@@ -29,3 +29,25 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+
+  # The Flutter app (apps/mobile) is not a pnpm workspace member, so it's
+  # invisible to the `verify` job above — it needs its own toolchain + gate.
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.6
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      # --fatal-infos so style regressions (not just errors) fail CI, matching
+      # the clean baseline. Drop it to --no-fatal-infos if that's too strict.
+      - run: flutter analyze --fatal-infos
+      - run: flutter test

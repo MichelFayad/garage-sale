@@ -10,7 +10,7 @@ void main() {
     test('list decodes watchlist entries with nested listings', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(
           jsonEncode([
             {
@@ -46,7 +46,7 @@ void main() {
     test('add posts the listingId', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestWatchlistRepository(
@@ -63,7 +63,7 @@ void main() {
     test('remove sends a DELETE to the listing-scoped endpoint', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestWatchlistRepository(

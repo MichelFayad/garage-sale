@@ -2,7 +2,7 @@ import 'package:garage_sale_mobile/listings/browse_repository.dart';
 import 'package:garage_sale_mobile/listings/models/listing.dart';
 
 class FakeBrowseRepository implements BrowseRepository {
-  FakeBrowseRepository({List<Listing> results = const []}) : _results = results;
+  FakeBrowseRepository({this._results = const []});
   final List<Listing> _results;
   String? lastKeyword;
   String? lastCategoryId;

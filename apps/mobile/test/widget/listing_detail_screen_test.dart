@@ -12,7 +12,7 @@ import '../support/in_memory_key_value_store.dart';
 
 void main() {
   testWidgets('shows the listing title and description', (tester) async {
-    final listing = Listing(
+    const listing = Listing(
       id: 'l1',
       ownerId: 'u2',
       type: ListingType.have,
@@ -21,7 +21,7 @@ void main() {
       condition: Condition.good,
       categoryId: 'c1',
       status: ListingStatus.active,
-      photos: const [],
+      photos: [],
     );
     final storage = TokenStorage(InMemoryKeyValueStore());
     await storage.saveTokens(
@@ -51,7 +51,7 @@ void main() {
   testWidgets(
     'tapping the watchlist button adds the listing and updates the icon',
     (tester) async {
-      final listing = Listing(
+      const listing = Listing(
         id: 'l1',
         ownerId: 'u2',
         type: ListingType.have,
@@ -60,7 +60,7 @@ void main() {
         condition: Condition.good,
         categoryId: 'c1',
         status: ListingStatus.active,
-        photos: const [],
+        photos: [],
       );
       final storage = TokenStorage(InMemoryKeyValueStore());
       await storage.saveTokens(

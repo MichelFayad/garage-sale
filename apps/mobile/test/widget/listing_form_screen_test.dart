@@ -49,7 +49,7 @@ void main() {
   });
 
   testWidgets('edit mode prefills fields from the existing listing', (tester) async {
-    final existing = Listing(
+    const existing = Listing(
       id: 'l1',
       ownerId: 'u1',
       type: ListingType.want,
@@ -58,7 +58,7 @@ void main() {
       condition: Condition.fair,
       categoryId: 'c1',
       status: ListingStatus.draft,
-      photos: const [],
+      photos: [],
     );
     final repo = FakeListingsRepository(mine: [existing]);
     final storage = TokenStorage(InMemoryKeyValueStore());
@@ -72,7 +72,7 @@ void main() {
           listingsRepositoryProvider.overrideWithValue(repo),
           tokenStorageProvider.overrideWithValue(storage),
         ],
-        child: MaterialApp(home: ListingFormScreen(existing: existing)),
+        child: const MaterialApp(home: ListingFormScreen(existing: existing)),
       ),
     );
     await tester.pumpAndSettle();

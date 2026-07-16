@@ -43,7 +43,7 @@ void main() {
     test('mine sends the bearer token and decodes a list of listings', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode([_listingJson()]), 200);
       });
       final repo = RestListingsRepository(
@@ -74,7 +74,7 @@ void main() {
     test('create posts the serialized input and decodes the response', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_listingJson()), 200);
       });
       final repo = RestListingsRepository(
@@ -98,7 +98,7 @@ void main() {
     test('update patches the listing by id', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_listingJson()), 200);
       });
       final repo = RestListingsRepository(
@@ -121,7 +121,7 @@ void main() {
     test('markTraded posts to the mark-traded endpoint', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode(_listingJson(status: 'COMPLETED')), 200);
       });
       final repo = RestListingsRepository(
@@ -138,7 +138,7 @@ void main() {
     test('remove sends a DELETE to the listing endpoint', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestListingsRepository(

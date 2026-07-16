@@ -10,7 +10,7 @@ void main() {
     test('post sends bearer header and decodes JSON body', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
@@ -46,7 +46,7 @@ void main() {
     test('get omits Authorization header when no token given', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
@@ -59,7 +59,7 @@ void main() {
     test('patch sends bearer header and body, decodes JSON response', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'id': 'l1'}), 200);
       });
       final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');
@@ -79,7 +79,7 @@ void main() {
     test('delete sends bearer header and decodes JSON response', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final client = ApiClient(httpClient: mock, baseUrl: 'http://test.local/api');

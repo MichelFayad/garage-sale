@@ -4,10 +4,9 @@ import 'package:garage_sale_mobile/listings/watchlist_repository.dart';
 
 class FakeWatchlistRepository implements WatchlistRepository {
   FakeWatchlistRepository({
-    List<WatchlistEntry> entries = const [],
-    List<Listing> catalog = const [],
-  }) : _entries = entries,
-       _catalog = catalog;
+    this._entries = const [],
+    this._catalog = const [],
+  });
 
   List<WatchlistEntry> _entries;
   final List<Listing> _catalog;

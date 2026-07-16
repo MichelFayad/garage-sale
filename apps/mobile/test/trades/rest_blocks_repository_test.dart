@@ -48,7 +48,7 @@ void main() {
     test('unblock DELETEs /mobile/blocks/:userId', () async {
       late http.Request captured;
       final mock = MockClient((request) async {
-        captured = request as http.Request;
+        captured = request;
         return http.Response(jsonEncode({'ok': true}), 200);
       });
       final repo = RestBlocksRepository(
